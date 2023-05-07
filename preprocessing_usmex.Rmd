@@ -1,0 +1,415 @@
+---
+title: "preprocessing_usmex"
+output: pdf_document
+date: "2023-04-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, message=FALSE}
+# quanteda stuff
+require(quanteda)
+require(quanteda.textmodels)
+require(quanteda.textstats)
+require(quanteda.textplots)
+require(quanteda.corpora)
+
+library(ggrepel)
+library(readxl)
+library(rvest)
+require(readtext)
+require(devtools)
+require(tidyverse)
+require(ggplot2) 
+library(stringr)
+library(purrr)
+library(readr)
+library(lubridate)
+```
+
+## Loading and modifying dataframe
+
+I notice that the data I collected does not include the President's party. I load a separate dataset with the name of every President and his party of membership. Some of the names diverge between the original dataset ("usmex_df") and the one with party membership. However, all of the last names match. 
+
+Therefore, I create a new variable called "last_name" for both datasets using *Regex*. Then I join both datasets with "last_name" as key, which yields a final "usmex_df" dataset with party membership included. I also use *lubridate* function year() to create a new variable for year, which will allow me to subset my corpus in later steps. 
+
+An early finding is that there are 1,412 speeches by Republican Presidents 1412
+```{r, message=FALSE, warning = FALSE}
+rm(list = ls())
+load("data/usmex_df") #loads as drugs_df already clean
+
+ usmex_df <- usmex_df %>% 
+   mutate(year = year(date),  
+          last_name = str_extract(speaker, pattern = "[[:alpha:]]*$"))
+ 
+ usmex_df <- usmex_df %>% 
+   mutate(last_name = case_when(
+     last_name == "Bush" & year > 1994 ~ "W. Bush",
+     last_name == "Roosevelt" & year > 1930 ~ "FDR",
+     TRUE ~ last_name
+   )) 
+ 
+ 
+ ###load df with each President's party
+ party <- read_csv("data/presidents.csv")
+ party <- party %>% 
+   mutate(last_name = str_extract(President, pattern = "[[:alpha:]]*$")) %>% 
+   select(President, last_name, Party, `Took office`, `Left office`) %>% 
+   rename(took_office = `Took office`, left_office = `Left office`, )
+ 
+ #two roosevelts, two bushs, two adams, two Harrisons, two Johnsons
+ #... Cleveland president in two nonconsecutive terms
+ 
+ party[6, 2] <- "JQ Adams" #John Quincy Adams != John Adams
+ party[9, 2] <- "W.H Harrison"
+ party[23, 2] <- "B. Harrison"
+ party[24, 2] <- "Cleveland (second term)" 
+ party[36, 2] <- "LB Johnson" 
+ party[43, 2] <- "W. Bush"
+ party[32,2] <- "FDR"
+ 
+ 
+ missing_pres <- data.frame("President" = c("Donald Trump", "Joe Biden"),
+                            "last_name" = c("Trump", "Biden"),
+                            "Party" = c("Republican", "Democratic"), 
+                            "took_office" = c("20/01/2017", "20/01/2021"),
+                            "left_office" = c("20/01/2021", "28/04/2023"))
+ 
+ party[44,5] <- "20/01/2017" #add obama's exit
+ 
+ party <- party %>% 
+   rbind(missing_pres) %>% 
+   mutate(took_office = dmy(took_office),
+          left_office = dmy(left_office),
+           duration =  difftime(left_office,took_office, units="days"))
+ 
+ party <- party %>% 
+   mutate(duration = as.numeric(duration))
+ 
+  usmex_df <- usmex_df %>% 
+    right_join(party, by = c("last_name" = "last_name"))
+  
+  table(usmex_df$Party)
+  table(usmex_df$last_name)
+  
+  usmex_df<- usmex_df %>% 
+    mutate(Party =  if_else(str_detect(Party,"Democratic"), "Democratic",
+                            if_else(str_detect(Party, "Republican"), "Republican", Party)))
+  
+table(usmex_df$Party)
+```
+
+### Number of drug-related documents by president 
+
+```{r}
+ndoc_pres <- usmex_df %>% 
+  group_by(last_name) %>% 
+  summarise(n_docs = n()) %>% 
+  arrange(desc(n_docs)) 
+ #Trump es el unico en top10 que solo fungio un termino; en realidad deberia estandarizar por eso
+
+ndoc_pres <- ndoc_pres %>% 
+  right_join(party, by = c("last_name" = "last_name")) #Cleveland has two nonconsecutive terms
+                                             # there are two adams presidents (do same as roosevelt above)
+
+ 
+ ndoc_pres <- ndoc_pres[-5,] #eliminar Johnson repetido
+ ndoc_pres <- ndoc_pres[-14,] #eliminar Cleveland repetido
+ 
+ndoc_pres <- ndoc_pres %>% 
+  mutate(Partido = if_else(str_detect(Party,"Democratic"), "Democrático",
+                           if_else(str_detect(Party, "Republican"), "Republicano", Party))) 
+  
+ndoc_top15 <- ndoc_pres %>% 
+  arrange(desc(n_docs)) %>% 
+  head(15)
+  
+  ndoc_top15 %>% 
+  ggplot(aes(x = fct_reorder(last_name, n_docs), y = n_docs, fill = Partido))+
+  geom_col()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
+    scale_y_continuous(breaks = seq(0, max(ndoc_top15$n_docs), by = 50))+
+  labs(title = 'Número de discursos y entrevistas presidenciales con término "México"', 
+       y = "Número de Documentos", 
+       x = "")
+
+```
+
+1. Normalizar por numero de dias en el poder
+
+```{r}
+  ndoc_pres %>% 
+  mutate(ndocsXday = n_docs/duration) %>% arrange(desc(ndocsXday)) %>% 
+  head(15) %>% 
+  ggplot(aes(x = fct_reorder(last_name, ndocsXday), y = ndocsXday, fill = Partido))+
+  geom_col()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
+  scale_y_continuous(breaks = seq(0, .5, by = 0.05))+
+  labs(title = 'Discursos y entrevistas presidenciales con mención de "México" ',
+       subtitle = "ponderado por número días en la presidencia",
+       y = "Número de Documentos por día", 
+       x = "")
+```
+
+2. Normalizar por total de discursos (en cuantos discursos usan el termino  Mexico como porcentaje de su numero total de discursos)
+
+```{r}
+######  total de discursos por presidente: 
+base_url <- "https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2="
+
+person_ids <- 200257:200320
+
+links <- paste0(base_url, person_ids, "&category2%5B%5D=406&category2%5B%5D=74&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=45&items_per_page=25")
+
+# Create an empty data frame to store the results
+results_df <- data.frame(president = character(), records = numeric())
+
+# Loop through each link and scrape the relevant information
+for (link in links) {
+  page <- read_html(link)
+  
+  # Extract the president's name from the page and remove the newline character
+  president <- page %>% html_nodes(".odd .views-field-field-docs-person") %>% html_text() %>% gsub("\n", "", .)
+  president <- president[1]
+  
+  # Extract the number of records found from the page and remove any non-numeric characters
+  records <- page %>% html_node("#block-system-main h3") %>% html_text() %>% gsub("[^0-9]", "", .)
+  
+  # Convert records to numeric format if possible
+  if (!is.na(records) & nchar(records) > 0) {
+    records <- as.numeric(records)
+    
+    # Remove the 125 if it appears before the number of records
+    if (!is.na(records) & is.numeric(records) & substr(records, 1, 3) == "125") {
+      records <- substr(records, 4, nchar(records))
+    }
+  }
+  
+  # Check if president and records are not empty before adding to the data frame
+  if (!is.na(president) & !is.na(records) & president != "" & records != "") {
+    # Add the results to the data frame
+    results_df <- rbind(results_df, data.frame(president = president, records = records))
+  }
+}
+
+# View the final results
+results_df
+
+```
+
+Now I must match the total number of records with our other dataframes, using the presidents' names. 
+
+```{r, warning= FALSE}
+#eliminate white space (aquí me quedé 28 abril)
+results_df <- results_df %>% 
+  mutate(president = gsub("^\\s+|\\s+$", "", president))
+
+
+#results_df$president
+#usmex_df$speaker
+
+usmex_df<- usmex_df %>% 
+  filter(!is.na(text)) %>% 
+  full_join(results_df, by = c("speaker" = "president"), multiple = "all") %>% 
+  filter(!(is.na(date)))
+
+```
+
+
+
+```{r}
+
+ndoc_pres_weighted <- usmex_df %>% 
+  group_by(last_name) %>% 
+  summarise(n_docs = n(),
+            total_speeches = as.numeric(records),
+            ndoc_prop = n_docs/total_speeches*100,
+            Partido = Party, 
+            year_office = year(took_office)) %>% 
+  slice(1) %>% 
+  arrange(desc(ndoc_prop)) #Andrew Johnson, Polk, Trump en ese orden (poner numeros)
+
+#on Johnson:  https://millercenter.org/president/johnson/foreign-affairs 
+#https://onlinelibrary.wiley.com/doi/abs/10.1002/9781118607879.ch5 
+# https://muse.jhu.edu/article/419283 ** Romero describe a Johnson 
+# https://www.redalyc.org/journal/600/60059441004/html/ **
+
+top3 <- ndoc_pres_weighted %>%
+  filter(last_name == "Johnson" | last_name == "Polk" | last_name == "Trump")
+
+
+ndoc_pres_weighted %>%   
+head(15) %>% 
+ggplot(aes(x = fct_reorder(last_name, ndoc_prop), y = ndoc_prop, fill = Partido))+
+  geom_col()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 4))+
+  labs(title = 'Documentos presidenciales con mención de "México" ',
+       subtitle = "ponderado por total de discursos",
+       y = "%", 
+       x = "", caption = "*discursos disponibles") +
+ geom_label_repel(data = top3, aes(x = last_name, 
+                             y = ndoc_prop - 1, label = year_office, hjust = 1), 
+                 size = 3, nudge_x = -2, nudge_y = 1) +
+  guides(
+  fill = guide_legend(
+    title = "Partido",
+    override.aes = aes(label = "")
+  )
+)
+```
+
+### Discursos por ano que mencionan Mexico
+
+opciones: hacerlo como valor absoluto... recortarlo a partir de 1945... hacerlo como proporcion
+combinacion de las anteriores
+creo que tiene mas sentido como proporcion
+
+```{r, warning=FALSE}
+ndoc_year <- usmex_df%>% 
+  group_by(year) %>% 
+   summarise(n_docs = n(),
+            total_speeches = as.numeric(records),
+            ndoc_prop = n_docs/total_speeches*100,
+            Partido = Party, 
+            year_office = year(took_office)) %>% 
+  slice(1) 
+
+save(ndoc_year, file = "ndoc_year.RData")
+
+ndoc_year %>% arrange(desc(ndoc_prop)) %>% head(10)
+
+#Aqui dejo mayo 6
+ndoc_year %>% 
+  ggplot(aes(x = year, y = ndoc_prop))+
+  geom_line()+
+  theme_test()+
+  scale_x_continuous(breaks = seq(1800,2023,10))+
+  scale_y_continuous(breaks = seq(0,11,0.7))+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  # agregar vlines en fechas relevantes (revision historica)
+  geom_vline(aes(xintercept = 1847), linetype = "dotted", color = "blue")+   
+  annotate("text", x=1827, y=10, label="1848 - Fin de Guerra \nMéxico-Americana ", color = "blue", size = 3)+
+  geom_vline(aes(xintercept = 1864), linetype = "dotted", color = "blue")+   
+  annotate("text", x=1872, y=5.6, label="1862 - \n                         Maximiliano en México", color = "blue", size = 3)
+  
+  
+  +
+  geom_vline(aes(xintercept = 1971), linetype = "dotted")+   
+  annotate("text", x=1969, y=30, label="1860", color = "blue", size = 3)+
+  geom_vline(aes(xintercept = 2017), linetype = "dotted")+   
+  annotate("text", x=2015, y=30, label="2017", color = "blue", size = 3)+
+  #geom_text(aes(x = 1983, y = 120, label = "1986"), size = 3, color = "black")+
+  labs(title = 'Number of Documents with "War on Drugs" related terms', 
+       subtitle = "Proclamations, Spoken Addresses/Remarks, and Inaugural Addresses", 
+       y = "Number of Documents", 
+       x = "", 
+       caption = '*In 1971 Nixon declares "War on Drugs" \n*In 1986 Reagan declares drug trade a "National Security Threat"\n*In 2017 Trump takes office')
+```
+
+## Converting dataframe to corpus
+
+```{r,warning=FALSE}
+corp_drug_speeches <- corpus(drugs_df, text_field = "text")
+save(corp_drug_speeches,file = "data/corp_drug_speeches")
+#summary(corp_drug_speeches)
+class(corp_drug_speeches)
+#as.character(corp_drug_speeches)[300]
+```
+
+## Subsetting 
+
+I decide to create different corpora, in case I may need them further down. 
+
+```{r}
+post_nixon <- corp_drug_speeches %>% 
+  corpus_subset(year >= 1969)
+
+nixon_reagan <- corp_drug_speeches %>% 
+  corpus_subset(last_name %in% c("Nixon", "Reagan"))
+
+republicans <- corp_drug_speeches %>% 
+  corpus_subset(Party == "Republican")
+
+democratic <- corp_drug_speeches %>% 
+  corpus_subset(Party == "Democratic")
+```
+
+
+## Preprocessing
+
+ - Tokenizing (bag of word assumption)
+ - Discarding stop words
+ - Removing capitalization, punctuation and numbers
+ - Combining similar terms (lemmatizing)
+
+```{r}
+toks_drugs <- corp_drug_speeches %>%
+  tokens(split_hyphens = T,
+         remove_punct = TRUE,
+         remove_numbers = TRUE,
+         remove_symbols = TRUE) %>%
+  tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+  tokens_remove(pattern = stopwords("en")) %>% 
+  tokens_wordstem()
+
+#head(toks_drugs)
+```
+
+Let's look at how our tokenized corpus would look with different n-grams. 
+```{r}
+toks_ngram <- corp_drug_speeches %>%
+  tokens(split_hyphens = T,
+         remove_punct = TRUE,
+         remove_numbers = TRUE,
+         remove_symbols = TRUE) %>%
+  tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+  tokens_remove(pattern = stopwords("en")) %>% 
+  tokens_wordstem() %>% 
+  tokens_ngrams(n = 2:4)
+
+#head(toks_ngram)
+```
+
+
+## Creating Document Feature Matrix (DTM)
+```{r}
+dtm_drugs <- dfm(toks_drugs)
+dtm_drugs_ngram <- dfm(toks_ngram)
+```
+
+### Exploring our DTM
+
+```{r}
+ndoc(dtm_drugs)
+nfeat(dtm_drugs)
+
+#document length 
+by_docs <- rowSums(dtm_drugs)
+
+#top features
+topfeatures(dtm_drugs, n = 200)
+
+dtm_drugs_weight <- dfm_weight(dtm_drugs, scheme = "prop")
+#dtm_drugs_weight
+```
+
+### save corpora
+
+```{r}
+save(toks_drugs, file = "data/toks_drugs")
+save(toks_ngram, file = "data/toks_ngram")
+save(dtm_drugs_ngram, file = "data/dtm_drugs_ngram")
+save(dtm_drugs, file = "data/dtm_drugs")
+save(drugs_df, file = "data/drug_speeches")
+save(party, file = "data/party")
+save(total_speeches, file = "data/total_speeches")
+```

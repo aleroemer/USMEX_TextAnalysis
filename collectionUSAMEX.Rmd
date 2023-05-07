@@ -1,0 +1,125 @@
+---
+title: "Collection_speechesUSMEX"
+output: pdf_document
+date: "2023-04-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message= FALSE}
+library(tidyverse)
+library(rvest)
+library(stringr)
+library(purrr)
+library(lubridate)
+library(readr)
+```
+
+México y Estados Unidos cumplen 200 años de relación diplomática. En este artículo empleo técnicas computacionales para recopilar y analizar la evolución del discurso presidencial de Estados Unidos con respecto a México. La idea es explorar cuándo, cuánto y cómo los presidentes estadounidenses se refieren a México. Para ello me apalanco del "The American Presidency Project" de la Universidad de California Santa Barbara (UCSB) en donde mantienen archivo de todos los discursos y documentos presidenciales desde George Washington. 
+
+
+## I. Collection: 
+
+### A. Search: 
+
+
+- **All of these Terms**: "Mexico"
+- **Any of these Terms**:  
+- **None of these Terms**: "Gulf of Mexico", "New Mexico"
+- **Document Category**: Presidential, Interviews, Fireside Chats, Inaugural Addresses, State of the Union Adresses
+
+Es importante notar que la eleccion de parametros influye enormemente sobre los resultados de la busqueda. Estas categorias incluyen no solo discurso hablado. De hecho, antes de 1857, la base de datos no cuenta con registros de discurso hablado. Muchos de los documentos recopilados son mensajes enviados al congreso por parte del presidente, hecho por escrito. 
+
+
+### B. Web Scraping
+
+Primero consigo el URL para las cuatro paginas que regresan resultados de discursos. Noto que todos los links tienen la misma estructura, seguida por "&page=[page number]". Por consecuencia, creo un vector para estos links. 
+
+```{r}
+
+search_1 <-  c("https://www.presidency.ucsb.edu/advanced-search?field-keywords=Mexico&field-keywords2=&field-keywords3=%22New%20Mexico%22%20%22Gulf%20of%20Mexico%22&from%5Bdate%5D=&to%5Bdate%5D=&person2=&category2%5B0%5D=406&category2%5B1%5D=74&category2%5B2%5D=53&category2%5B3%5D=46&category2%5B4%5D=45&items_per_page=25")
+
+
+output <- vector("character", length = 156L) #this search yields 9 pages
+
+for (i in seq_along(1:156)){
+  output1 <- str_c(search_1, "&page=",sep = "")
+  output[[i]] <- str_c(output1, i , sep = "") 
+}
+
+all_pages <- c(search_1, output)
+#all_pages
+
+```
+
+## Extracting all URLs for each of the search pages
+
+Now that I have a vector containing all four search pages, I will retrieve the URL from each of them. I do this by creating a function that incorporates the different steps for reading urls within the search pages. Next, I create a *for loop* that iterates over each of my search pages, yielding 2894 total urls. 
+
+```{r}
+retrieve_urls <- function(URL){
+  
+  get_html = read_html(URL)
+  
+  page_urls = html_elements(get_html, css = ".views-field-title a") %>% 
+  html_attr('href')
+  return(page_urls)
+}
+
+all_urls <- character()
+for (i in all_pages){
+ all_urls <- c(all_urls, retrieve_urls(i))
+}
+
+str(all_urls) # speeches retrieved
+
+```
+
+I now have part of the 2894 URLs, but must append the webpage's domain in order to obtain the full URLs. 
+
+```{r}
+full_links  <- str_c("https://www.presidency.ucsb.edu", all_urls, sep = "")
+#full_links
+```
+
+
+## Scraping information from full links 
+
+Now that I have 520 full URLs, I will iterate the function created in class *scrape_docs* over each of them, to obtain the required information. 
+
+```{r}
+scrape_docs <- function(URL){
+  doc <- read_html(URL)
+
+  speaker <- html_nodes(doc, ".diet-title a") %>% 
+    html_text()
+  
+  date <- html_nodes(doc, ".date-display-single") %>%
+    html_text() %>%
+    mdy()
+  
+  title <- html_nodes(doc, "h1") %>%
+    html_text()
+  
+  text <- html_nodes(doc, "div.field-docs-content") %>%
+    html_text()
+  
+  all_info <- list(speaker = speaker, date = date, title = title, text = text)
+
+  return(all_info)
+}
+
+scraped_all<- map(full_links, scrape_docs)
+usmex_df <- bind_rows(scraped_all)
+ 
+str(usmex_df)
+save(usmex_df, file = "data/usmex_df")
+
+```

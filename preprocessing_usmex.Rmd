@@ -299,20 +299,12 @@ ndoc_year %>%
   geom_vline(aes(xintercept = 1847), linetype = "dotted", color = "blue")+   
   annotate("text", x=1827, y=10, label="1848 - Fin de Guerra \nMéxico-Americana ", color = "blue", size = 3)+
   geom_vline(aes(xintercept = 1864), linetype = "dotted", color = "blue")+   
-  annotate("text", x=1872, y=5.6, label="1862 - \n                         Maximiliano en México", color = "blue", size = 3)
+  annotate("text", x=1872, y=5.6, label="1862 - \n                         Maximiliano en México", color = "blue", size = 3)+
+  geom_vline(aes(xintercept = 1923), linetype = "dotted", color = "blue") +   
+  annotate("text", x=1910, y=7.7, label="1923 - \nSuspensión de \nrelaciones diplomáticas", color = "blue", size = 3)
   
   
-  +
-  geom_vline(aes(xintercept = 1971), linetype = "dotted")+   
-  annotate("text", x=1969, y=30, label="1860", color = "blue", size = 3)+
-  geom_vline(aes(xintercept = 2017), linetype = "dotted")+   
-  annotate("text", x=2015, y=30, label="2017", color = "blue", size = 3)+
-  #geom_text(aes(x = 1983, y = 120, label = "1986"), size = 3, color = "black")+
-  labs(title = 'Number of Documents with "War on Drugs" related terms', 
-       subtitle = "Proclamations, Spoken Addresses/Remarks, and Inaugural Addresses", 
-       y = "Number of Documents", 
-       x = "", 
-       caption = '*In 1971 Nixon declares "War on Drugs" \n*In 1986 Reagan declares drug trade a "National Security Threat"\n*In 2017 Trump takes office')
+ 
 ```
 
 ## Converting dataframe to corpus
@@ -342,6 +334,20 @@ republicans <- corp_drug_speeches %>%
 democratic <- corp_drug_speeches %>% 
   corpus_subset(Party == "Democratic")
 ```
+
+
+Pico 1923: 
+
+
+La suspensión de relaciones diplomáticas entre México y Estados Unidos en 1923 se debió en gran medida a las tensiones que surgieron después de la Revolución Mexicana y la posterior promulgación de la Constitución Mexicana de 1917, que estableció reformas agrarias y laborales radicales.
+
+Además, durante el gobierno del presidente mexicano Álvaro Obregón (1920-1924), México se vio envuelto en una serie de conflictos con empresas estadounidenses, incluida la compañía petrolera estadounidense Standard Oil, que había sido expropiada por el gobierno mexicano en 1917. Esto llevó a la aplicación de sanciones comerciales por parte de Estados Unidos y a un aumento de las tensiones diplomáticas.
+
+En 1923, las tensiones alcanzaron un punto crítico cuando el embajador de Estados Unidos en México, Dwight Morrow, fue expulsado del país después de criticar al gobierno mexicano en un discurso público. A su vez, el presidente de Estados Unidos, Calvin Coolidge, ordenó la retirada de todos los diplomáticos estadounidenses de México y la suspensión de relaciones diplomáticas con el país.
+
+Las relaciones diplomáticas no se restablecieron hasta 1928, cuando el presidente mexicano Plutarco Elías Calles y el presidente estadounidense Herbert Hoover firmaron un acuerdo para normalizar las relaciones entre los dos países.
+
+
 
 
 ## Preprocessing

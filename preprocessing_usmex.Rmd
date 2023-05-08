@@ -321,8 +321,8 @@ ndoc_year %>%
 corpus_usmex <- corpus(usmex_df, text_field = "text")
 save(corpus_usmex,file = "data/corpus_usmex")
 #summary(corpus_usmex)
-class(corp_drug_speeches)
-#as.character(corp_drug_speeches)[300]
+class(corpus_usmex)
+#as.character(corpus_usmex)[300]
 ```
 
 ## Subsetting 

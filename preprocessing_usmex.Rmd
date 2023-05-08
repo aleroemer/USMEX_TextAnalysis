@@ -255,7 +255,7 @@ ggplot(aes(x = fct_reorder(last_name, ndoc_prop), y = ndoc_prop, fill = Partido)
   labs(title = 'Documentos presidenciales con mención de "México" ',
        subtitle = "ponderado por total de discursos",
        y = "%", 
-       x = "", caption = "*discursos disponibles") +
+       x = "", caption = "*discursos disponibles en https://www.presidency.ucsb.edu/") +
  geom_label_repel(data = top3, aes(x = last_name, 
                              y = ndoc_prop - 1, label = year_office, hjust = 1), 
                  size = 3, nudge_x = -2, nudge_y = 1) +
@@ -305,7 +305,11 @@ ndoc_year %>%
   geom_vline(aes(xintercept = 1993), linetype = "dotted", color = "blue") +   
   annotate("text", x=1985, y=3.0, label="1993 - \nTLCAN", color = "blue", size = 3) +
   geom_vline(aes(xintercept = 2017), linetype = "dotted", color = "blue") +   
-  annotate("text", x=2010, y=5.0, label="2017 - \nTrump", color = "blue", size = 3)
+  annotate("text", x=2010, y=5.0, label="2017 - \nTrump", color = "blue", size = 3)+
+  labs(title = 'Documentos presidenciales con mención de "México" ',
+       subtitle = "ponderado por total de discursos",
+       y = "%", 
+       x = "", caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
   
   
  
@@ -314,9 +318,9 @@ ndoc_year %>%
 ## Converting dataframe to corpus
 
 ```{r,warning=FALSE}
-corp_drug_speeches <- corpus(drugs_df, text_field = "text")
-save(corp_drug_speeches,file = "data/corp_drug_speeches")
-#summary(corp_drug_speeches)
+corpus_usmex <- corpus(usmex_df, text_field = "text")
+save(corpus_usmex,file = "data/corpus_usmex")
+#summary(corpus_usmex)
 class(corp_drug_speeches)
 #as.character(corp_drug_speeches)[300]
 ```

@@ -332,15 +332,20 @@ I decide to create different corpora, in case I may need them further down.
 ```{r}
 post_1900 <- corpus_usmex %>% 
   corpus_subset(year >= 1900)
+save(post_1900,file = "data/corpus_post1900")
+
 
 Trump_Biden <- corpus_usmex %>% 
   corpus_subset(last_name %in% c("Trump", "Biden"))
+save(Trump_Biden,file = "data/corpus_TrumpBiden")
 
-republicans <- corp_drug_speeches %>% 
+republicans <- corpus_usmex %>% 
   corpus_subset(Party == "Republican")
+save(republicans,file = "data/corpus_republicans")
 
-democratic <- corp_drug_speeches %>% 
+democratic <- corpus_usmex %>% 
   corpus_subset(Party == "Democratic")
+save(democratic,file = "data/corpus_democratic")
 ```
 
 

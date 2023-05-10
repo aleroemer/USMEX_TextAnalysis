@@ -330,11 +330,11 @@ class(corpus_usmex)
 I decide to create different corpora, in case I may need them further down. 
 
 ```{r}
-post_nixon <- corp_drug_speeches %>% 
-  corpus_subset(year >= 1969)
+post_1900 <- corpus_usmex %>% 
+  corpus_subset(year >= 1900)
 
-nixon_reagan <- corp_drug_speeches %>% 
-  corpus_subset(last_name %in% c("Nixon", "Reagan"))
+Trump_Biden <- corpus_usmex %>% 
+  corpus_subset(last_name %in% c("Trump", "Biden"))
 
 republicans <- corp_drug_speeches %>% 
   corpus_subset(Party == "Republican")

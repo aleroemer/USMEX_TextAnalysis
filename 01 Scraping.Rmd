@@ -1,0 +1,68 @@
+---
+title: "Scraping_speeches"
+output: pdf_document
+date: "2023-04-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### A. Retrieve the scraping functions we created
+
+```{r}
+DATA_PATH = "/Users/hugosalas/Roemer & Salas/"
+SCRIPT_PATH = "/Users/hugosalas/Roemer & Salas/"
+source(str_c(SCRIPT_PATH, 'scraping_TAPP_utils.R'))
+```
+
+### B. First and most important search: Mexico mentions 
+We scrape all articles containing the string "Mexico" and nott "New Mexico" or "Gulf of Mexico".
+
+- **All of these Terms**: "Mexico"
+- **Any of these Terms**:  
+- **None of these Terms**: "Gulf of Mexico", "New Mexico"
+- **Document Category**: All except for Timeline
+
+```{r}
+# Este es el URL con todas las categorias menos timeline
+MEXICO_URL = "https://www.presidency.ucsb.edu/advanced-search?field-keywords=Mexico&field-keywords2=&field-keywords3=%22New+Mexico%22+%22Gulf+of+Mexico%22&from%5Bdate%5D=&to%5Bdate%5D=&person2=&category2%5B%5D=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+
+mexico_df = scrape_all_docs_from_URL(MEXICO_URL)
+head(mexico_df)
+save(mexico_df, file = str_c(DATA_PATH,"all_articles_MEXICO_df"))
+```
+
+### C. Additional searches: mention from top 5 trade partners
+We scrape all articles that contain the name of one of US' top 5 trade partners (excluding Mexico).
+
+- **All of these Terms**: China, Canada, Japan, Germany 
+- **Any of these Terms**:  
+- **None of these Terms**:
+- **Document Category**: All except for Timeline
+
+```{r}
+CHINA_URL = "https://www.presidency.ucsb.edu/advanced-search?field-keywords=China&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=&category2%5B%5D=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+
+CANADA_URL = "https://www.presidency.ucsb.edu/advanced-search?field-keywords=Canada&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=&category2%5B%5D=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+
+JAPAN_URL = "https://www.presidency.ucsb.edu/advanced-search?field-keywords=Japan&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=&category2%5B%5D=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+
+GERMANY_URL = "https://www.presidency.ucsb.edu/advanced-search?field-keywords=Germany&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2=&category2%5B%5D=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+
+TRADE_PARTNERS_URL = list(CHINA = CHINA_URL, 
+                          CANADA = CANADA_URL, 
+                          JAPAN = JAPAN_URL, 
+                          GERMANY = GERMANY_URL)
+```
+
+```{r}
+for (i in seq_along(TRADE_PARTNERS_URL)){
+  country_name = names(TRADE_PARTNERS_URL)[i]
+  print(country_name)
+  country_df = scrape_all_docs_from_URL( TRADE_PARTNERS_URL[[i]] )
+  save(country_df, file = str_c(DATA_PATH,"all_articles_", country_name, "_df"))
+}
+
+
+```

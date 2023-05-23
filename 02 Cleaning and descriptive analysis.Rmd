@@ -1,0 +1,480 @@
+---
+title: "cleaning_n_descriptive"
+output: pdf_document
+date: "2023-04-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### A. Load all relevant packages and set directories
+
+```{r, message=FALSE, warning = FALSE}
+require(quanteda)
+require(quanteda.textmodels)
+require(quanteda.textstats)
+require(quanteda.textplots)
+require(quanteda.corpora)
+
+library(ggrepel)
+library(readxl)
+library(rvest)
+require(readtext)
+require(devtools)
+require(tidyverse)
+require(ggplot2) 
+library(stringr)
+library(purrr)
+library(readr)
+library(lubridate)
+```
+
+```{r, message=FALSE, warning = FALSE}
+rm(list = ls())
+DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
+SCRIPT_PATH = "/Users/hugosalas/Roemer & Salas/"
+
+source(str_c(SCRIPT_PATH, 'data_manipulation_utils.R'))
+```
+
+### B. Load all relevant files and DF
+
+```{r, message=FALSE}
+
+## Article data from our 5 countries
+FILES_TO_LOAD = c("all_articles_CANADA_df", "all_articles_JAPAN_df", 
+                  "all_articles_GERMANY_df", "all_articles_CHINA_df", 
+                  "all_articles_MEXICO_df")
+
+# Store all dfs in a list
+trade_partners_lst = list()
+
+for (file in FILES_TO_LOAD){
+  load(str_c(DATA_PATH,'/' , file))
+  
+  country_name = str_replace(file, "all_articles_", "")
+  country_name = str_replace(country_name, "_df", "")
+  
+  if (file != "all_articles_MEXICO_df"){
+    trade_partners_lst[[country_name]] = country_df
+    rm(country_df)
+  } else {
+    trade_partners_lst[[country_name]] = mexico_df
+    rm(mexico_df)
+  }
+}
+
+## Data at the president level with party membership, legnth of stay, among others
+party_df <- read_csv(str_c(DATA_PATH, "/presidents.csv"))
+```
+
+### C. Data cleaning and manipulation
+
+```{r, message=FALSE}
+## Clean the data we have on presidents
+party_df = clean_party_df(party_df)
+
+## Cleaning our doc data from all our countries
+for (country in seq_along(trade_partners_lst)){
+  # Reformat dates in all DFs so that they look intuitive
+  trade_partners_lst[[ country ]]$date = as.Date(as.numeric(trade_partners_lst[[ country ]]$date))
+  # Add last name and year to DF
+  trade_partners_lst[[ country ]] = add_last_name_n_year_to_df( trade_partners_lst[[ country ]] )
+  # Merge with party/president data
+  trade_partners_lst[[ country ]] <- trade_partners_lst[[ country ]] %>% 
+    left_join(party_df, by = c("last_name" = "last_name"))
+  # Recategorize party variable so it separates between democrats and republicans
+  trade_partners_lst[[ country ]] <- recategorize_parties(trade_partners_lst[[ country ]])
+}
+```
+
+### D. Quick data exploration to get some truths
+
+```{r, message=FALSE}
+for (country in names(trade_partners_lst)){
+  print(str_c('############## ', country, ' ############'))
+  
+  nrows = nrow( trade_partners_lst[[ country ]] )
+  print(str_c('Number of rows/docs: ', nrows ))
+  
+  print('Party Membership %')
+  print(table( trade_partners_lst[[ country ]]$Party)/nrows*100)
+  
+  print('Doc category % (top 7)')
+  print(sort(colSums( trade_partners_lst[[ country ]][,5:74], na.rm = TRUE), decreasing = TRUE)[1:7]/nrows)
+  
+  print(str_c('Share of docs not coming directly from the president: ', sum(is.na(trade_partners_lst[[ country ]]$Party))/nrows*100))
+  
+  for (i in 1:3){
+    cat("\n")
+  }
+}
+```
+### E. Mentions by year per country
+
+```{r, warning=FALSE}
+counts_year = data.frame()
+
+for (country in seq_along(trade_partners_lst)){
+  
+  # Group by year while we count
+  groupby_temp <- trade_partners_lst[[country]]%>% 
+    group_by(year) %>% 
+     summarise(n_docs = n())
+  
+  # Add a column to identify each batch/country
+  groupby_temp['country'] = names(trade_partners_lst)[country]
+  
+  # Append to df
+  counts_year = rbind(counts_year, groupby_temp)
+}
+
+
+# Since there wasn't much happening before 1900, let's create several graphs 
+#   with varying start years
+for (start_year in c(1800,1900, 1950, 1980)){
+  plot = ggplot(counts_year[counts_year['year']>start_year,], aes(year, n_docs, color = country)) + 
+    geom_line(aes(group=country)) +
+    theme_test()+
+    scale_x_continuous(breaks = pretty_breaks(n = 10))+
+    scale_y_continuous(breaks = pretty_breaks(n = 5))+
+    theme(axis.text.x = element_text(angle = 0, vjust = .7))+
+    labs(title = '" ',
+         subtitle = "",
+         y = "", 
+         x = "", 
+         caption = "",
+         color = 'Legend')
+  
+  print(plot)
+}
+
+```
+
+### Number of drug-related documents by president 
+
+```{r}
+ndoc_pres <- usmex_df %>% 
+  group_by(last_name) %>% 
+  summarise(n_docs = n()) %>% 
+  arrange(desc(n_docs)) 
+ #Trump es el unico en top10 que solo fungio un termino; en realidad deberia estandarizar por eso
+
+ndoc_pres <- ndoc_pres %>% 
+  right_join(party, by = c("last_name" = "last_name")) #Cleveland has two nonconsecutive terms
+                                             # there are two adams presidents (do same as roosevelt above)
+
+ 
+ ndoc_pres <- ndoc_pres[-5,] #eliminar Johnson repetido
+ ndoc_pres <- ndoc_pres[-14,] #eliminar Cleveland repetido
+ 
+ndoc_pres <- ndoc_pres %>% 
+  mutate(Partido = if_else(str_detect(Party,"Democratic"), "Democrático",
+                           if_else(str_detect(Party, "Republican"), "Republicano", Party))) 
+  
+ndoc_top15 <- ndoc_pres %>% 
+  arrange(desc(n_docs)) %>% 
+  head(15)
+  
+  ndoc_top15 %>% 
+  ggplot(aes(x = fct_reorder(last_name, n_docs), y = n_docs, fill = Partido))+
+  geom_col()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
+    scale_y_continuous(breaks = seq(0, max(ndoc_top15$n_docs), by = 50))+
+  labs(title = 'Número de discursos y entrevistas presidenciales con término "México"', 
+       y = "Número de Documentos", 
+       x = "")
+
+```
+
+1. Normalizar por numero de dias en el poder
+
+```{r}
+  ndoc_pres %>% 
+  mutate(ndocsXday = n_docs/duration) %>% arrange(desc(ndocsXday)) %>% 
+  head(15) %>% 
+  ggplot(aes(x = fct_reorder(last_name, ndocsXday), y = ndocsXday, fill = Partido))+
+  geom_col()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
+  scale_y_continuous(breaks = seq(0, .5, by = 0.05))+
+  labs(title = 'Discursos y entrevistas presidenciales con mención de "México" ',
+       subtitle = "ponderado por número días en la presidencia",
+       y = "Número de Documentos por día", 
+       x = "")
+```
+
+2. Normalizar por total de discursos (en cuantos discursos usan el termino  Mexico como porcentaje de su numero total de discursos)
+
+```{r}
+######  total de discursos por presidente: 
+base_url <- "https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2="
+
+person_ids <- 200257:200320
+
+links <- paste0(base_url, person_ids, "&category2%5B%5D=406&category2%5B%5D=74&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=45&items_per_page=25")
+
+# Create an empty data frame to store the results
+results_df <- data.frame(president = character(), records = numeric())
+
+# Loop through each link and scrape the relevant information
+for (link in links) {
+  page <- read_html(link)
+  
+  # Extract the president's name from the page and remove the newline character
+  president <- page %>% html_nodes(".odd .views-field-field-docs-person") %>% html_text() %>% gsub("\n", "", .)
+  president <- president[1]
+  
+  # Extract the number of records found from the page and remove any non-numeric characters
+  records <- page %>% html_node("#block-system-main h3") %>% html_text() %>% gsub("[^0-9]", "", .)
+  
+  # Convert records to numeric format if possible
+  if (!is.na(records) & nchar(records) > 0) {
+    records <- as.numeric(records)
+    
+    # Remove the 125 if it appears before the number of records
+    if (!is.na(records) & is.numeric(records) & substr(records, 1, 3) == "125") {
+      records <- substr(records, 4, nchar(records))
+    }
+  }
+  
+  # Check if president and records are not empty before adding to the data frame
+  if (!is.na(president) & !is.na(records) & president != "" & records != "") {
+    # Add the results to the data frame
+    results_df <- rbind(results_df, data.frame(president = president, records = records))
+  }
+}
+
+# View the final results
+results_df
+
+```
+
+Now I must match the total number of records with our other dataframes, using the presidents' names. 
+
+```{r, warning= FALSE}
+#eliminate white space (aquí me quedé 28 abril)
+results_df <- results_df %>% 
+  mutate(president = gsub("^\\s+|\\s+$", "", president))
+
+
+#results_df$president
+#usmex_df$speaker
+
+usmex_df<- usmex_df %>% 
+  filter(!is.na(text)) %>% 
+  full_join(results_df, by = c("speaker" = "president"), multiple = "all") %>% 
+  filter(!(is.na(date)))
+
+```
+
+
+
+```{r}
+
+ndoc_pres_weighted <- usmex_df %>% 
+  group_by(last_name) %>% 
+  summarise(n_docs = n(),
+            total_speeches = as.numeric(records),
+            ndoc_prop = n_docs/total_speeches*100,
+            Partido = Party, 
+            year_office = year(took_office)) %>% 
+  slice(1) %>% 
+  arrange(desc(ndoc_prop)) #Andrew Johnson, Polk, Trump en ese orden (poner numeros)
+
+#on Johnson:  https://millercenter.org/president/johnson/foreign-affairs 
+#https://onlinelibrary.wiley.com/doi/abs/10.1002/9781118607879.ch5 
+# https://muse.jhu.edu/article/419283 ** Romero describe a Johnson 
+# https://www.redalyc.org/journal/600/60059441004/html/ **
+
+top3 <- ndoc_pres_weighted %>%
+  filter(last_name == "Johnson" | last_name == "Polk" | last_name == "Trump")
+
+
+ndoc_pres_weighted %>%   
+head(15) %>% 
+ggplot(aes(x = fct_reorder(last_name, ndoc_prop), y = ndoc_prop, fill = Partido))+
+  geom_col()+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 4))+
+  labs(title = 'Documentos presidenciales con mención de "México" ',
+       subtitle = "ponderado por total de discursos",
+       y = "%", 
+       x = "", caption = "*discursos disponibles en https://www.presidency.ucsb.edu/") +
+ geom_label_repel(data = top3, aes(x = last_name, 
+                             y = ndoc_prop - 1, label = year_office, hjust = 1), 
+                 size = 3, nudge_x = -2, nudge_y = 1) +
+  guides(
+  fill = guide_legend(
+    title = "Partido",
+    override.aes = aes(label = "")
+  )
+)
+```
+
+### Discursos por ano que mencionan Mexico
+
+opciones: hacerlo como valor absoluto... recortarlo a partir de 1945... hacerlo como proporcion
+combinacion de las anteriores
+creo que tiene mas sentido como proporcion
+
+```{r, warning=FALSE}
+ndoc_year <- usmex_df%>% 
+  group_by(year) %>% 
+   summarise(n_docs = n(),
+            total_speeches = as.numeric(records),
+            ndoc_prop = n_docs/total_speeches*100,
+            Partido = Party, 
+            year_office = year(took_office)) %>% 
+  slice(1) 
+
+save(ndoc_year, file = "ndoc_year.RData")
+
+ndoc_year %>% arrange(desc(ndoc_prop)) %>% head(10)
+
+
+ndoc_year %>% 
+  ggplot(aes(x = year, y = ndoc_prop))+
+  geom_line()+
+  theme_test()+
+  scale_x_continuous(breaks = seq(1800,2023,10))+
+  scale_y_continuous(breaks = seq(0,11,0.7))+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  # agregar vlines en fechas relevantes (revision historica)
+  geom_vline(aes(xintercept = 1847.5), linetype = "dotted", color = "blue")+   
+  annotate("text", x=1827, y=10, label="1848 - Fin de Guerra \nMéxico-Americana ", color = "blue", size = 3)+
+  geom_vline(aes(xintercept = 1864), linetype = "dotted", color = "blue")+   
+  annotate("text", x=1872, y=4.0, label="1862 - \n                         Maximiliano en México", color = "blue", size = 3)+
+  geom_vline(aes(xintercept = 1923), linetype = "dotted", color = "blue") +   
+  annotate("text", x=1937, y=3.7, label="1923 - \nSuspensión \nde relaciones \ndiplomáticas", color = "blue", size = 3) +
+  geom_vline(aes(xintercept = 1993), linetype = "dotted", color = "blue") +   
+  annotate("text", x=1985, y=3.0, label="1993 - \nTLCAN", color = "blue", size = 3) +
+  geom_vline(aes(xintercept = 2017), linetype = "dotted", color = "blue") +   
+  annotate("text", x=2010, y=5.0, label="2017 - \nTrump", color = "blue", size = 3)+
+  labs(title = 'Documentos presidenciales con mención de "México" ',
+       subtitle = "ponderado por total de discursos",
+       y = "%", 
+       x = "", caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
+```
+
+## Converting dataframe to corpus
+
+```{r,warning=FALSE}
+corpus_usmex <- corpus(usmex_df, text_field = "text")
+save(corpus_usmex,file = "data/corpus_usmex")
+#summary(corpus_usmex)
+class(corpus_usmex)
+#as.character(corpus_usmex)[300]
+```
+
+## Subsetting 
+
+I decide to create different corpora, in case I may need them further down. 
+
+```{r}
+post_1900 <- corpus_usmex %>% 
+  corpus_subset(year >= 1900)
+save(post_1900,file = "data/corpus_post1900")
+
+
+Trump_Biden <- corpus_usmex %>% 
+  corpus_subset(last_name %in% c("Trump", "Biden"))
+save(Trump_Biden,file = "data/corpus_TrumpBiden")
+
+republicans <- corpus_usmex %>% 
+  corpus_subset(Party == "Republican")
+save(republicans,file = "data/corpus_republicans")
+
+democratic <- corpus_usmex %>% 
+  corpus_subset(Party == "Democratic")
+save(democratic,file = "data/corpus_democratic")
+```
+
+
+Pico 1923: 
+
+
+La suspensión de relaciones diplomáticas entre México y Estados Unidos en 1923 se debió en gran medida a las tensiones que surgieron después de la Revolución Mexicana y la posterior promulgación de la Constitución Mexicana de 1917, que estableció reformas agrarias y laborales radicales.
+
+Además, durante el gobierno del presidente mexicano Álvaro Obregón (1920-1924), México se vio envuelto en una serie de conflictos con empresas estadounidenses, incluida la compañía petrolera estadounidense Standard Oil, que había sido expropiada por el gobierno mexicano en 1917. Esto llevó a la aplicación de sanciones comerciales por parte de Estados Unidos y a un aumento de las tensiones diplomáticas.
+
+En 1923, las tensiones alcanzaron un punto crítico cuando el embajador de Estados Unidos en México, Dwight Morrow, fue expulsado del país después de criticar al gobierno mexicano en un discurso público. A su vez, el presidente de Estados Unidos, Calvin Coolidge, ordenó la retirada de todos los diplomáticos estadounidenses de México y la suspensión de relaciones diplomáticas con el país.
+
+Las relaciones diplomáticas no se restablecieron hasta 1928, cuando el presidente mexicano Plutarco Elías Calles y el presidente estadounidense Herbert Hoover firmaron un acuerdo para normalizar las relaciones entre los dos países.
+
+
+
+## Preprocessing
+
+ - Tokenizing (bag of word assumption)
+ - Discarding stop words
+ - Removing capitalization, punctuation and numbers
+ - Combining similar terms (lemmatizing)
+
+```{r}
+toks_usmex<- corpus_usmex %>%
+  tokens(split_hyphens = T,
+         remove_punct = TRUE,
+         remove_numbers = TRUE,
+         remove_symbols = TRUE) %>%
+  tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+  tokens_remove(pattern = stopwords("en")) %>% 
+  tokens_wordstem()
+
+#head(toks_usmex)
+```
+
+Let's look at how our tokenized corpus would look with different n-grams. 
+```{r}
+toks_ngram <- corp_drug_speeches %>%
+  tokens(split_hyphens = T,
+         remove_punct = TRUE,
+         remove_numbers = TRUE,
+         remove_symbols = TRUE) %>%
+  tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+  tokens_remove(pattern = stopwords("en")) %>% 
+  tokens_wordstem() %>% 
+  tokens_ngrams(n = 2:4)
+
+#head(toks_ngram)
+```
+
+
+## Creating Document Feature Matrix (DTM)
+```{r}
+dtm_drugs <- dfm(toks_drugs)
+dtm_drugs_ngram <- dfm(toks_ngram)
+```
+
+### Exploring our DTM
+
+```{r}
+ndoc(dtm_drugs)
+nfeat(dtm_drugs)
+
+#document length 
+by_docs <- rowSums(dtm_drugs)
+
+#top features
+topfeatures(dtm_drugs, n = 200)
+
+dtm_drugs_weight <- dfm_weight(dtm_drugs, scheme = "prop")
+#dtm_drugs_weight
+```
+
+### save corpora
+
+```{r}
+save(toks_drugs, file = "data/toks_drugs")
+save(toks_ngram, file = "data/toks_ngram")
+save(dtm_drugs_ngram, file = "data/dtm_drugs_ngram")
+save(dtm_drugs, file = "data/dtm_drugs")
+save(drugs_df, file = "data/drug_speeches")
+save(party, file = "data/party")
+save(total_speeches, file = "data/total_speeches")
+```

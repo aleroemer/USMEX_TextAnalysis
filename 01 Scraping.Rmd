@@ -1,9 +1,10 @@
 ---
-title: "Scraping_speeches"
+title: "Scraping_docs"
 output: pdf_document
 date: "2023-04-25"
 ---
 
+This doc helps us scrape all the docs we need from The American Presidency Project.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -11,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### A. Retrieve the scraping functions we created
 
 ```{r}
-DATA_PATH = "/Users/hugosalas/Roemer & Salas/"
+DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
 SCRIPT_PATH = "/Users/hugosalas/Roemer & Salas/"
 source(str_c(SCRIPT_PATH, 'scraping_TAPP_utils.R'))
 ```

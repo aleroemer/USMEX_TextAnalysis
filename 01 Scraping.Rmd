@@ -13,8 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
-SCRIPT_PATH = "/Users/hugosalas/Roemer & Salas/"
-source(str_c(SCRIPT_PATH, 'scraping_TAPP_utils.R'))
+UTILS_PATH = "/Users/hugosalas/Roemer & Salas/utils/"
+source(str_c(UTILS_PATH, 'scraping_TAPP_utils.R'))
 ```
 
 ### B. First and most important search: Mexico mentions 
@@ -64,6 +64,71 @@ for (i in seq_along(TRADE_PARTNERS_URL)){
   country_df = scrape_all_docs_from_URL( TRADE_PARTNERS_URL[[i]] )
   save(country_df, file = str_c(DATA_PATH,"all_articles_", country_name, "_df"))
 }
+```
 
+### D. Grab total number of documents written by PRESIDENT
 
+```{r}
+BASE_URL_HEAD <- "https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2=&field-keywords3=&from%5Bdate%5D=&to%5Bdate%5D=&person2="
+BASE_URL_TAIL <- "&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+PRESIDENT_IDS <- 200257:200320
+```
+
+```{r}
+links <- paste0(BASE_URL_HEAD, PRESIDENT_IDS, BASE_URL_TAIL)
+
+# Create an empty data frame to store the results
+all_articles_presidents_df <- data.frame(president = character(), records = numeric())
+
+# Loop through each link and scrape the relevant information
+for (link in links) {
+  page <- read_html(link)
+  
+  # Extract the president's name from the page and remove the newline character
+  president <- page %>% html_nodes(".odd .views-field-field-docs-person") %>% html_text() %>% gsub("\n", "", .)
+  president <- gsub("^\\s+|\\s+$", "", president[1]) #remove whitespace
+  
+  # Extract the number of records found from the page and remove any non-numeric characters
+  records <- retrieve_number_of_records(page)
+  
+  # Check if president and records are not empty before adding to the data frame
+  if (!is.na(president) & !is.na(records) & president != "" & records != "") {
+    # Add the results to the data frame
+    all_articles_presidents_df <- rbind(all_articles_presidents_df, data.frame(president = president, records = records))
+  }
+}
+
+save(all_articles_presidents_df, file = str_c(DATA_PATH,"/all_articles_presidents_df"))
+```
+
+### E. Grab total number of documents written by YEAR
+
+```{r}
+BASE_URL_HEAD <- "https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2=&field-keywords3=&from%5Bdate%5D=01-01-"
+BASE_URL_BELLY <- "&to%5Bdate%5D=12-31-"
+BASE_URL_TAIL <- "&person2=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
+YEARS <- 1789:2023
+```
+
+```{r}
+# Create an empty data frame to store the results
+all_articles_years_df <- data.frame(year = numeric(), records = numeric())
+
+# Loop through each link and scrape the relevant information
+for (year in YEARS) {
+  
+  link <- paste0(BASE_URL_HEAD, year, BASE_URL_BELLY, year, BASE_URL_TAIL)
+  page <- read_html(link)
+  
+  # Extract the number of records found from the page and remove any non-numeric characters
+  records <- retrieve_number_of_records(page)
+  
+  # Check if president and records are not empty before adding to the data frame
+  if (!is.na(year) & !is.na(records) & year != "" & records != "") {
+    # Add the results to the data frame
+    all_articles_years_df <- rbind(all_articles_years_df, data.frame(year = year, records = records))
+  }
+}
+
+save(all_articles_years_df, file = str_c(DATA_PATH,"/all_articles_years_df"))
 ```

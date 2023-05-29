@@ -33,6 +33,7 @@ library(scales)
 
 ```{r, message=FALSE, warning = FALSE}
 rm(list = ls())
+
 DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
 UTILS_PATH = "/Users/hugosalas/Roemer & Salas/utils/"
 
@@ -70,7 +71,7 @@ for (file in FILES_TO_LOAD){
   }
 }
 
-## Data at the president level with party membership, legnth of stay, among others
+## Data at the president level with party membership, length of stay, among others
 party_df <- read_csv(str_c(DATA_PATH, "/presidents.csv"))
 ```
 

@@ -34,10 +34,16 @@ library(scales)
 ```{r, message=FALSE, warning = FALSE}
 rm(list = ls())
 
-DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
-UTILS_PATH = "/Users/hugosalas/Roemer & Salas/utils/"
+###Hugo
+#DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
+#UTILS_PATH = "/Users/hugosalas/Roemer & Salas/utils/"
 
-source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
+#Ale 
+setwd("~/My Drive/DiscursoUSA_MX")
+DATA_PATH = "~/My Drive/DiscursoUSA_MX/data"
+UTILS_PATH = "~/My Drive/DiscursoUSA_MX/USMEX_TextAnalysis/utils"
+
+source(str_c(UTILS_PATH, '/data_manipulation_utils.R'))
 ```
 
 ### B. Load all relevant files and DF

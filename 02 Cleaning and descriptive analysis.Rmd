@@ -34,16 +34,17 @@ library(scales)
 ```{r, message=FALSE, warning = FALSE}
 rm(list = ls())
 
-###Hugo
-#DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
-#UTILS_PATH = "/Users/hugosalas/Roemer & Salas/utils/"
+if (Sys.info()["user"]=='hugosalas'){
+  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+  DATA_PATH =  paste0(BASE_PATH, "data")
+  UTILS_PATH = paste0(BASE_PATH, "utils/")
+} else if (Sys.info()["user"]=='aleroemer'){
+  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+  DATA_PATH =  paste0(BASE_PATH, "data")
+  UTILS_PATH = paste0(BASE_PATH, "utils/")
+}
 
-#Ale 
-setwd("~/My Drive/DiscursoUSA_MX")
-DATA_PATH = "~/My Drive/DiscursoUSA_MX/data"
-UTILS_PATH = "~/My Drive/DiscursoUSA_MX/USMEX_TextAnalysis/utils"
-
-source(str_c(UTILS_PATH, '/data_manipulation_utils.R'))
+source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
 ```
 
 ### B. Load all relevant files and DF
@@ -77,15 +78,22 @@ for (file in FILES_TO_LOAD){
   }
 }
 
-## Data at the president level with party membership, length of stay, among others
+## Data at the president level with party membership, legnth of stay, among others
 party_df <- read_csv(str_c(DATA_PATH, "/presidents.csv"))
 ```
 
 ### C. Data cleaning and manipulation
 
 ```{r, message=FALSE}
+CATEGORIES_TO_OMIT <- c("Vice Presidential", "Vice Presidential Candidates", 
+                               "Vice President's Press Secretary", 
+                               "Vice Presidential Debates", "Vice President's Statements",
+                               "Vice President's Remarks", "First Lady Press",
+                               "First Lady")
+
 ## Clean the data we have on presidents
 party_df = clean_party_df(party_df)
+
 
 ## Cleaning our doc data from all our countries
 for (country in seq_along(trade_partners_lst)){
@@ -95,9 +103,14 @@ for (country in seq_along(trade_partners_lst)){
   trade_partners_lst[[ country ]] = add_last_name_n_year_to_df( trade_partners_lst[[ country ]] )
   # Merge with party/president data
   trade_partners_lst[[ country ]] <- trade_partners_lst[[ country ]] %>% 
-    left_join(party_df, by = c("last_name" = "last_name"))
+    inner_join(party_df, by = c("last_name" = "last_name"))
   # Recategorize party variable so it separates between democrats and republicans
   trade_partners_lst[[ country ]] <- recategorize_parties(trade_partners_lst[[ country ]])
+  
+  #Remove uninteresting categories
+  for (category in CATEGORIES_TO_OMIT){
+    trade_partners_lst[[ country ]] = trade_partners_lst[[ country ]][trade_partners_lst[[ country ]][category]==0,]
+  }
 }
 ```
 

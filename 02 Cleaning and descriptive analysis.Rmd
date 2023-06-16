@@ -39,9 +39,9 @@ if (Sys.info()["user"]=='hugosalas'){
   DATA_PATH =  paste0(BASE_PATH, "data")
   UTILS_PATH = paste0(BASE_PATH, "utils/")
 } else if (Sys.info()["user"]=='aleroemer'){
-  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+  BASE_PATH = "~/My Drive/DiscursoUSA_MX/"
   DATA_PATH =  paste0(BASE_PATH, "data")
-  UTILS_PATH = paste0(BASE_PATH, "utils/")
+  UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
 }
 
 source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
@@ -78,7 +78,7 @@ for (file in FILES_TO_LOAD){
   }
 }
 
-## Data at the president level with party membership, legnth of stay, among others
+## Data at the president level with party membership, length of stay, among others
 party_df <- read_csv(str_c(DATA_PATH, "/presidents.csv"))
 ```
 

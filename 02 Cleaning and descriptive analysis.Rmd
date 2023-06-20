@@ -36,13 +36,13 @@ rm(list = ls())
 
 if (Sys.info()["user"]=='hugosalas'){
   BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
-  DATA_PATH =  paste0(BASE_PATH, "data")
-  UTILS_PATH = paste0(BASE_PATH, "utils/")
 } else if (Sys.info()["user"]=='aleroemer'){
   BASE_PATH = "~/My Drive/DiscursoUSA_MX/"
-  DATA_PATH =  paste0(BASE_PATH, "data")
-  UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
 }
+
+DATA_PATH =  paste0(BASE_PATH, "data/")
+CLEAN_DATA_PATH = paste0(DATA_PATH, "clean/")
+UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
 
 source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
 ```
@@ -61,7 +61,7 @@ FILES_TO_LOAD = c("all_articles_CANADA_df", "all_articles_JAPAN_df",
 trade_partners_lst = list()
 
 for (file in FILES_TO_LOAD){
-  load(str_c(DATA_PATH,'/' , file))
+  load(str_c(DATA_PATH , file))
   
   if (file != 'all_articles_presidents_df' &
       file != 'all_articles_years_df'){
@@ -79,7 +79,7 @@ for (file in FILES_TO_LOAD){
 }
 
 ## Data at the president level with party membership, length of stay, among others
-party_df <- read_csv(str_c(DATA_PATH, "/presidents.csv"))
+party_df <- read_csv(str_c(DATA_PATH, "presidents.csv"))
 ```
 
 ### C. Data cleaning and manipulation
@@ -93,7 +93,6 @@ CATEGORIES_TO_OMIT <- c("Vice Presidential", "Vice Presidential Candidates",
 
 ## Clean the data we have on presidents
 party_df = clean_party_df(party_df)
-
 
 ## Cleaning our doc data from all our countries
 for (country in seq_along(trade_partners_lst)){
@@ -335,107 +334,49 @@ top15_df %>%
        x = "") +
   coord_flip()
 ```
-
-## Converting dataframe to corpus
-
-```{r,warning=FALSE}
-corpus_usmex <- corpus(usmex_df, text_field = "text")
-save(corpus_usmex,file = "data/corpus_usmex")
-#summary(corpus_usmex)
-class(corpus_usmex)
-#as.character(corpus_usmex)[300]
-```
-
-## Subsetting
-
-I decide to create different corpora, in case I may need them further down.
-
-```{r}
-post_1900 <- corpus_usmex %>% 
-  corpus_subset(year >= 1900)
-save(post_1900,file = "data/corpus_post1900")
-
-
-Trump_Biden <- corpus_usmex %>% 
-  corpus_subset(last_name %in% c("Trump", "Biden"))
-save(Trump_Biden,file = "data/corpus_TrumpBiden")
-
-republicans <- corpus_usmex %>% 
-  corpus_subset(Party == "Republican")
-save(republicans,file = "data/corpus_republicans")
-
-democratic <- corpus_usmex %>% 
-  corpus_subset(Party == "Democratic")
-save(democratic,file = "data/corpus_democratic")
-```
-
-## Preprocessing
-
+### H. Save each country's articles in different formats: CORPUS, TOKENS, N-GRAMS, DFM
+To create the tokens, we do the following: 
 -   Tokenizing (bag of word assumption)
 -   Discarding stop words
 -   Removing capitalization, punctuation and numbers
 -   Combining similar terms (lemmatizing)
 
-```{r}
-toks_usmex<- corpus_usmex %>%
-  tokens(split_hyphens = T,
-         remove_punct = TRUE,
-         remove_numbers = TRUE,
-         remove_symbols = TRUE) %>%
-  tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
-  tokens_remove(pattern = stopwords("en")) %>% 
-  tokens_wordstem()
+```{r,warning=FALSE}
+for (country in names(trade_partners_lst)){
+  print(country)
+  # Save CORPUS
+  temp_corpus = corpus(trade_partners_lst[[country]], text_field = "text")
+  save(temp_corpus, file = paste0(CLEAN_DATA_PATH, "corpus_", country))
+  
+  # Save TOKENS
+  temp_tokens<- temp_corpus %>%
+    tokens(split_hyphens = T,
+           remove_punct = TRUE,
+           remove_numbers = TRUE,
+           remove_symbols = TRUE) %>%
+    tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+    tokens_remove(pattern = stopwords("en")) %>% 
+    tokens_wordstem()
+  save(temp_tokens, file = paste0(CLEAN_DATA_PATH, "tokens_", country))
+  
+  # Save N-GRAMS
+  temp_tokens_ngram <- temp_corpus %>%
+    tokens(split_hyphens = T,
+           remove_punct = TRUE,
+           remove_numbers = TRUE,
+           remove_symbols = TRUE) %>%
+    tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+    tokens_remove(pattern = stopwords("en")) %>% 
+    tokens_wordstem() %>% 
+    tokens_ngrams(n = 2:4)
+  save(temp_tokens, file = paste0(CLEAN_DATA_PATH, "tokens_ngram_", country))
+  
+  # Save DFM
+  temp_dfm_tokens <- dfm(temp_tokens)
+  save(temp_dfm_tokens, file = paste0(CLEAN_DATA_PATH, "dfm_tokens_", country))
+  temp_dfm_tokens_ngram <- dfm(temp_tokens_ngram)
+  save(temp_dfm_tokens_ngram, file = paste0(CLEAN_DATA_PATH, "dfm_tokens_ngram_", country))
+}
 
-#head(toks_usmex)
-```
-
-Let's look at how our tokenized corpus would look with different n-grams.
-
-```{r}
-toks_ngram <- corp_drug_speeches %>%
-  tokens(split_hyphens = T,
-         remove_punct = TRUE,
-         remove_numbers = TRUE,
-         remove_symbols = TRUE) %>%
-  tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
-  tokens_remove(pattern = stopwords("en")) %>% 
-  tokens_wordstem() %>% 
-  tokens_ngrams(n = 2:4)
-
-#head(toks_ngram)
-```
-
-## Creating Document Feature Matrix (DTM)
-
-```{r}
-dtm_drugs <- dfm(toks_drugs)
-dtm_drugs_ngram <- dfm(toks_ngram)
-```
-
-### Exploring our DTM
-
-```{r}
-ndoc(dtm_drugs)
-nfeat(dtm_drugs)
-
-#document length 
-by_docs <- rowSums(dtm_drugs)
-
-#top features
-topfeatures(dtm_drugs, n = 200)
-
-dtm_drugs_weight <- dfm_weight(dtm_drugs, scheme = "prop")
-#dtm_drugs_weight
-```
-
-### save corpora
-
-```{r}
-save(toks_drugs, file = "data/toks_drugs")
-save(toks_ngram, file = "data/toks_ngram")
-save(dtm_drugs_ngram, file = "data/dtm_drugs_ngram")
-save(dtm_drugs, file = "data/dtm_drugs")
-save(drugs_df, file = "data/drug_speeches")
-save(party, file = "data/party")
-save(total_speeches, file = "data/total_speeches")
+rm(temp_corpus, temp_tokens, temp_tokens_ngram, temp_dfm_tokens_ngram, temp_dfm_tokens)
 ```

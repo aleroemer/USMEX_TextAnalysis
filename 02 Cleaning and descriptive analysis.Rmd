@@ -172,7 +172,7 @@ for (start_year in c(1800,1900, 1950, 1980)){
          y = "", 
          x = "", 
          caption = "",
-         color = 'Legend')
+         color = 'País') #cambiar nombre de paises a español
   
   print(plot)
 }
@@ -252,7 +252,7 @@ counts_year[counts_year$country=='MEXICO',] %>%
   geom_vline(aes(xintercept = 2017), linetype = "dotted", color = COLOR) +   
   annotate("text", x=2010, y=Y_VAL, label="2017 - \nTrump", color = COLOR, size = SIZE)+
   labs(title = 'Documentos presidenciales con mención de "México" ',
-       subtitle = "Dividido por total de documentos ese ano",
+       subtitle = "Dividido por total de documentos ese año",
        y = "", 
        x = "", 
        caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")

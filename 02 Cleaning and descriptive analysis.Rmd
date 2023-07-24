@@ -180,17 +180,27 @@ for (start_year in c(1800,1900, 1950, 1980)){
 ```{r, warning=FALSE}
 counts_since2010 <- counts_year[counts_year$year>2010,] %>%
   group_by(country) %>%
-  summarize(average = mean(n_docs))
+  summarize(average = round(mean(n_docs),2))
 
-ggplot(data = counts_since2010, aes(x = reorder(country, average), y = average, fill=country)) +
+counts_since2010 <- counts_since2010 %>% 
+  mutate(pais = case_when(
+    country == "CANADA" ~ "CANADÁ",
+    country == "MEXICO" ~ "MÉXICO",
+    country == "JAPAN" ~ "JAPÓN",
+    country == "GERMANY" ~ "ALEMANIA", 
+    country == "CHINA" ~ "CHINA",
+  ))
+
+
+ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=pais)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  geom_text(data = counts_since2010, aes(x = country, y = average, label = average), vjust = -0.5, color = "black") +
+  geom_text(data = counts_since2010, aes(x = pais, y = average, label = average), vjust = -0.5, color = "black") +
   labs(title = 'Promedio de menciones desde 2010',
        subtitle = "",
        y = "", 
        x = "", 
-       caption = "")
+       caption = "País")
 ```
 
 ### F. Mexico mentions by year

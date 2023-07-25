@@ -71,7 +71,10 @@ current_country = 'MEXICO'
 #Create unique text ID column
 trade_partners_lst[[current_country]] = create_unique_id(current_country)
 
+#Create a paragraph df with only paragraphs that mention MEXICO
 paragraphs_df = separate_text_into_paragraphs(country = current_country)
+save(paragraphs_df, file = paste0(CLEAN_DATA_PATH, "paragraphs_", 'MEXICO'))
+
 tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
 
 # Identify threat tokens
@@ -151,7 +154,7 @@ add_annotations_to_mx_time_series_plot(plot,
 ### D. Sentiment analysis using sentiment.ai
 
 ```{r}
-install.packages("devtools")
+asdsad
 
 ```
 

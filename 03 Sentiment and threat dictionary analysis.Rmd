@@ -1,0 +1,209 @@
+---
+title: "sentiment_n_threat_dictionary"
+author: "Alejandro Roemer & Hugo Salas"
+date: "2023-06-25"
+output: pdf_document
+---
+
+This was originally 'dictionary_project.rmd'.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### A. Load all relevant packages and set directories
+
+```{r, message=FALSE}
+library(tidyverse)
+library(textdata)
+library(quanteda)
+#require(quanteda.corpora)
+library(tidytext)
+library(scales)
+# Check if devtools package is installed
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  # Install devtools package
+  install.packages("devtools")
+  
+  # Load devtools package
+  library(devtools)
+} else {
+  # Load devtools package
+  library(devtools)
+}
+```
+
+```{r}
+rm(list = ls())
+
+if (Sys.info()["user"]=='hugosalas'){
+  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+} else if (Sys.info()["user"]=='aleroemer'){
+  BASE_PATH = "~/My Drive/DiscursoUSA_MX/"
+}
+
+DATA_PATH =  paste0(BASE_PATH, "data/")
+CLEAN_DATA_PATH = paste0(DATA_PATH, "clean/")
+UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
+
+source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
+```
+
+### B. Load all relevant files and DF
+
+```{r}
+load(paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
+
+threat_dict <- read.delim(paste0(DATA_PATH, "threat.txt"),
+                          header = FALSE) %>% 
+  rename(threat_features = V1)
+```
+
+### C. Threat dictionary analysis (Choi et al. (2022))
+
+This dictionary does not have a sentiment associated to it, therefore we cannot use the quanteda function as.dictionary(). Instead, following the methodology by I will only be able to count the number of matches and the percent of threat
+
+#### i. MEXICO: Figure out which words in our paragraphs are 'threat' words
+
+```{r}
+current_country = 'MEXICO'
+
+#Create unique text ID column
+trade_partners_lst[[current_country]] = create_unique_id(current_country)
+
+paragraphs_df = separate_text_into_paragraphs(country = current_country)
+tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
+
+# Identify threat tokens
+tokens_df <- tokens_df %>% 
+  mutate(threat_feature = if_else(word_tokens %in% threat_dict$threat_features, 1, 0))
+
+# Count all tokens
+tokens_df$count = 1
+```
+
+#### ii. MEXICO: Most used 'threat' words in all documents related to Mexico
+
+```{r}
+tokens_df %>% 
+  filter(threat_feature == 1) %>% 
+  count(word_tokens) %>% 
+  arrange(desc(n)) %>%
+  head(20) %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n), n))+
+  geom_col(fill = "lightblue")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_y_continuous(breaks = seq(0,2000,100))+
+  labs(title = 'Most common features from "threat dictionary"',
+       x = "", y = "Frequency", 
+       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
+```
+
+#### iii. MEXICO: Threat words over time
+
+```{r}
+# Aggregate by text
+agg_threats <- tokens_df %>%
+  group_by(text_ID) %>%
+  summarise(n_threat_tokens = sum(threat_feature),
+            n_tokens = sum(count))
+
+trade_partners_lst[[current_country]] <- trade_partners_lst[[current_country]] %>%
+  left_join(agg_threats, by = c("text_ID" = "text_ID")) %>%
+  mutate(n_threat_tokens = if_else(is.na(n_threat_tokens), 0, n_threat_tokens),
+         n_tokens = if_else(is.na(n_tokens), 0, n_tokens))
+
+trade_partners_lst[[current_country]]$count = 1
+
+# Group by year
+groupby_temp <- trade_partners_lst[[current_country]]%>% 
+  group_by(year) %>% 
+  summarise(total_threat_tokens = sum(n_threat_tokens),
+            total_tokens = sum(n_tokens),
+            total_docs = sum(count) )
+
+groupby_temp$threat_per_token = groupby_temp$total_threat_tokens/groupby_temp$total_tokens
+groupby_temp$threat_per_doc = groupby_temp$total_threat_tokens/groupby_temp$total_docs
+  
+```
+
+```{r}
+plot = groupby_temp %>% 
+  ggplot(aes(x = year, y = threat_per_token))
+add_annotations_to_mx_time_series_plot(plot, 
+                                       text_color = 'purple', 
+                                       plot_title = '# of threat words per token',
+                                       text_y_val = 0.03,
+                                       bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
+```
+
+```{r}
+plot = groupby_temp %>% 
+  ggplot(aes(x = year, y = threat_per_doc))
+
+add_annotations_to_mx_time_series_plot(plot, 
+                                       text_color = 'purple', 
+                                       plot_title = '# of threat words per doc',
+                                       bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
+```
+
+### D. Sentiment analysis using sentiment.ai
+
+```{r}
+install.packages("devtools")
+
+```
+
+# V. key words in context (kwic)
+
+## 1. document level
+
+```{r}
+#toks_kwic <- tokens(corp_drug_speeches, remove_punct = TRUE) %>% 
+#  tokens_remove(pattern = stopwords("en"))
+load("data/corp_drug_speeches")
+toks_kwic <-corp_drug_speeches %>%
+  tokens(split_hyphens = TRUE,
+         remove_punct = TRUE,
+         remove_numbers = TRUE,
+         remove_symbols = TRUE) %>%
+  tokens_tolower() %>% 
+  tokens_remove(pattern = stopwords("en")) 
+
+kwic_party <- toks_kwic %>% 
+  tokens_group(groups = last_name)
+
+textplot_xray(kwic(kwic_party, pattern = "drug*"))
+
+
+#get relevant keywords and phrases
+drug_words <- c("drug*")
+
+toks_drugkwic <- tokens_keep(toks_kwic, pattern = phrase(drug_words), window = 5)
+```
+
+## 3. paragraph level
+
+```{r}
+corp_par <- corpus(drugs_df_paragraph2, text_field = "text_paragraph")
+save(corp_par, file = "data/corpus_paragraph")
+
+toks_kwic <-corp_par %>%
+  tokens(split_hyphens = TRUE,
+         remove_punct = TRUE,
+         remove_numbers = TRUE,
+         remove_symbols = TRUE) %>%
+  tokens_tolower() %>% 
+  tokens_remove(pattern = stopwords("en")) 
+
+kwic_party <- toks_kwic %>% 
+  tokens_group(groups = last_name)
+
+quanteda.textplots::textplot_xray(kwic(kwic_party, pattern = "drug*"))
+
+```
+
+### Distinctiveness
+
+What words make it easiest to distinguish between democrats and republicans?

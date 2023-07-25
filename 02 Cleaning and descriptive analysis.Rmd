@@ -2,7 +2,10 @@
 title: "cleaning_n_descriptive"
 output: pdf_document
 date: "2023-04-26"
+author: "Alejandro Roemer & Hugo Salas"
 ---
+
+This was originally 'preprocessing_usmex.rmd'.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -191,8 +194,12 @@ counts_since2010 <- counts_since2010 %>%
     country == "CHINA" ~ "CHINA",
   ))
 
+<<<<<<< Updated upstream
 
 ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=pais)) +
+=======
+ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=country)) +
+>>>>>>> Stashed changes
   geom_bar(stat = "identity") +
   coord_flip() +
   geom_text(data = counts_since2010, aes(x = pais, y = average, label = average), vjust = -0.5, color = "black") +
@@ -345,15 +352,54 @@ top15_df %>%
   coord_flip()
 ```
 ### H. Save each country's articles in different formats: CORPUS, TOKENS, N-GRAMS, DFM
-To create the tokens, we do the following: 
+To create the tokenized file, we do the following: 
 -   Tokenizing (bag of word assumption)
 -   Discarding stop words
 -   Removing capitalization, punctuation and numbers
 -   Combining similar terms (lemmatizing)
 
+
 ```{r,warning=FALSE}
+save(trade_partners_lst, file = paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
+
 for (country in names(trade_partners_lst)){
+  
   print(country)
+
+  # Save CORPUS
+  temp_corpus = corpus(trade_partners_lst[[country]], text_field = "text")
+  save(temp_corpus, file = paste0(CLEAN_DATA_PATH, "corpus_", country))
+  
+  # Save TOKENS
+  temp_tokens<- temp_corpus %>%
+    tokens(split_hyphens = T,
+           remove_punct = TRUE,
+           remove_numbers = TRUE,
+           remove_symbols = TRUE) %>%
+    tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+    tokens_remove(pattern = stopwords("en")) %>% 
+    tokens_wordstem()
+  save(temp_tokens, file = paste0(CLEAN_DATA_PATH, "tokens_", country))
+  
+  # Save N-GRAMS
+  temp_tokens_ngram <- temp_corpus %>%
+    tokens(split_hyphens = T,
+           remove_punct = TRUE,
+           remove_numbers = TRUE,
+           remove_symbols = TRUE) %>%
+    tokens_tolower(keep_acronyms = T) %>% # I decided to keep acronyms (govt doc!)
+    tokens_remove(pattern = stopwords("en")) %>% 
+    tokens_wordstem() %>% 
+    tokens_ngrams(n = 2:4)
+  save(temp_tokens, file = paste0(CLEAN_DATA_PATH, "tokens_ngram_", country))
+  
+  # Save DFM
+  temp_dfm_tokens <- dfm(temp_tokens)
+  save(temp_dfm_tokens, file = paste0(CLEAN_DATA_PATH, "dfm_tokens_", country))
+  temp_dfm_tokens_ngram <- dfm(temp_tokens_ngram)
+  save(temp_dfm_tokens_ngram, file = paste0(CLEAN_DATA_PATH, "dfm_tokens_ngram_", country))
+}
+  
   # Save CORPUS
   temp_corpus = corpus(trade_partners_lst[[country]], text_field = "text")
   save(temp_corpus, file = paste0(CLEAN_DATA_PATH, "corpus_", country))
@@ -390,3 +436,4 @@ for (country in names(trade_partners_lst)){
 
 rm(temp_corpus, temp_tokens, temp_tokens_ngram, temp_dfm_tokens_ngram, temp_dfm_tokens)
 ```
+  

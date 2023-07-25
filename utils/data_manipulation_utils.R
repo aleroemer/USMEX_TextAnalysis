@@ -1,3 +1,17 @@
+#' Add President's Last Name and Document Year Columns to Data Frame
+#'
+#' This function adds a last name and year column to the input data frame.
+#'
+#' @param df The input data frame.
+#'
+#' @return The data frame with added last name and year columns.
+#'
+#' @examples
+#' data <- read.csv("your_data.csv")
+#' df_with_columns <- add_last_name_n_year_to_df(data)
+#' # Continue working with the modified data frame
+#'
+#' @export
 add_last_name_n_year_to_df <- function(df){
   
   "Adds a last name and year column to DF"
@@ -17,6 +31,22 @@ add_last_name_n_year_to_df <- function(df){
 }
 
 
+#' Clean Party Data Frame
+#'
+#' This function cleans and modifies a party data frame by extracting the last 
+#'    name from the President column, selecting specific columns, renaming 
+#'    columns, and making additional adjustments.
+#'
+#' @param party_df The input party data frame.
+#'
+#' @return The cleaned and modified party data frame.
+#'
+#' @examples
+#' party_data <- read.csv("party_data.csv")
+#' cleaned_data <- clean_party_df(party_data)
+#' # Continue working with the cleaned and modified data frame
+#'
+#' @export
 clean_party_df <- function(party_df){
 
   party_df <- party_df %>% 
@@ -57,6 +87,22 @@ clean_party_df <- function(party_df){
 }
 
 
+#' Recategorize Parties in Data Frame
+#'
+#' This function recategorizes parties in the input data frame by grouping them 
+#'  into "Democratic" and "Republican" categories. Any other party names will 
+#'  remain unchanged.
+#'
+#' @param df The input data frame.
+#'
+#' @return The data frame with recategorized parties.
+#'
+#' @examples
+#' data <- read.csv("your_data.csv")
+#' df_with_recategorized_parties <- recategorize_parties(data)
+#' # Continue working with the modified data frame
+#'
+#' @export
 recategorize_parties <- function(df){
 
   df<- df %>% 
@@ -64,5 +110,115 @@ recategorize_parties <- function(df){
                             if_else(str_detect(Party, "Republican"), "Republican", Party)))
 
   return(df)
+}
 
+
+#' Creates a unique ID for country texts
+#'
+#' This function creates an additional column in a country tibble to create
+#'  and ID for each text.
+#'    
+#' @param country A string with the name of a country in the list trade_partners_lst.
+#'
+#' @return The resulting tibble with a new column
+#'
+#' @examples
+#' create_unique_id('MEXICO')
+create_unique_id <- function(country){
+  
+  return(trade_partners_lst[[country]] %>% 
+           mutate(text_ID = row_number()))
+}
+
+
+#' Separates texts into paragraphs
+#'
+#' This function separates texts in a tibble into paragraphs in another tibble.
+#'    It also removes paragraphs where the desired country string (e.g. 'MEXICO')
+#'    is not included within the paragraph, transforms the text into upper case,
+#'    removes empty paragraphs and adds a unique paragraph ID. 
+#'    
+#' @param country A string with the name of a country in the list trade_partners_lst.
+#'
+#' @return The resulting paragraph tibble.
+#'
+#' @examples
+#' separate_text_into_paragraphs('MEXICO')
+#' 
+#' @export
+separate_text_into_paragraphs <- function(country){
+  
+  # Generate a new df with each row being a paragraph that contains the selected country name
+  paragraphs_df <- trade_partners_lst[[country]] %>% 
+    #divide based on the newline character + any 
+    #potential white space
+    mutate(text_paragraph = str_split(toupper(text), "\n+\\s*")) %>% 
+    unnest(text_paragraph) %>% 
+    filter(text_paragraph != "") %>%
+    filter(str_detect(text_paragraph, country)) %>% 
+    select(text_ID, text_paragraph)
+  
+  # Assign each paragraph to a unique ID
+  paragraphs_df <- paragraphs_df %>% 
+    mutate(paragraph_ID = row_number())
+
+  return(paragraphs_df)
+}
+
+
+#' Add Annotations to a Time Series Plot Related to Mexico
+#'
+#' This function adds vertical lines and text annotations to a time series plot 
+#'  for specific years in Mexican history.
+#'
+#' @param plot The original plot to which the annotations will be added.
+#' @param text_color The color of the annotation text. Default is 'blue'.
+#' @param text_y_val The y-axis value at which the annotations will be placed. Default is 25.
+#' @param text_size The size of the annotation text. Default is 3.
+#' @param plot_subtitle The subtitle of the plot. Default is an empty string.
+#' @param xlab The label for the x-axis. Default is an empty string.
+#' @param ylab The label for the y-axis. Default is an empty string.
+#' @param bottom_note_text The caption or additional note displayed at the bottom of the plot. Default is an empty string.
+#' @param plot_title The title of the plot. Default is an empty string.
+#'
+#' @return The plot with added vertical lines and text annotations.
+#'
+#' @examples
+#' plot <- ggplot(data = your_data) +
+#'          # Add your other plot layers
+#'
+#' plot_with_annotations <- add_annotations_to_mx_time_series_plot(plot)
+#' # Continue customizing and displaying the plot
+#'
+#' @export
+add_annotations_to_mx_time_series_plot <- function(plot, 
+                                                   text_color = 'blue', 
+                                                   text_y_val = 25,
+                                                   text_size = 3,
+                                                   plot_subtitle = "",
+                                                   xlab = "",
+                                                   ylab = "",
+                                                   bottom_note_text = "",
+                                                   plot_title = ""){
+  
+  plot +
+  geom_line() +
+  theme_test() +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 5)) +
+  labs(title = plot_title,
+       subtitle = plot_subtitle,
+       y = ylab, 
+       x = xlab, 
+       caption = bottom_note_text) +
+  geom_vline(aes(xintercept = 1847.5), linetype = "dotted", color = text_color)+   
+  annotate("text", x=1827, y=text_y_val, label="1848 - Fin de Guerra \nMéxico-Americana ", color = text_color, size = text_size)+
+  geom_vline(aes(xintercept = 1864), linetype = "dotted", color = text_color)+   
+  annotate("text", x=1872, y=text_y_val, label="1862 - \n                         Maximiliano en México", color = text_color, size = text_size)+
+  geom_vline(aes(xintercept = 1923), linetype = "dotted", color = text_color) +   
+  annotate("text", x=1937, y=text_y_val, label="1923 - \nSuspensión \nde relaciones \ndiplomáticas", color = text_color, size = text_size) +
+  geom_vline(aes(xintercept = 1993), linetype = "dotted", color = text_color) +   
+  annotate("text", x=1985, y=text_y_val, label="1993 - \nTLCAN", color = text_color, size = text_size) +
+  geom_vline(aes(xintercept = 2017), linetype = "dotted", color = text_color) +   
+  annotate("text", x=2010, y=text_y_val, label="2017 - \nTrump", color = text_color, size = text_size)
 }

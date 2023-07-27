@@ -194,12 +194,9 @@ counts_since2010 <- counts_since2010 %>%
     country == "CHINA" ~ "CHINA",
   ))
 
-<<<<<<< Updated upstream
+
 
 ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=pais)) +
-=======
-ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=country)) +
->>>>>>> Stashed changes
   geom_bar(stat = "identity") +
   coord_flip() +
   geom_text(data = counts_since2010, aes(x = pais, y = average, label = average), vjust = -0.5, color = "black") +

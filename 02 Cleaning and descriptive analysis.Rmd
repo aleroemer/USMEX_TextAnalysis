@@ -295,11 +295,13 @@ for (category in VICE_PRESIDENT_CATEGORIES){
 ndoc_pres <- temp_df %>% 
   group_by(last_name, speaker) %>% 
   summarise(n_docs = n()) %>% 
-  arrange(desc(n_docs)) 
+  arrange(desc(n_docs)) #hay que sacar a hillary clinton
+
 
 # Pegar datos adicionales de presidente y partido
 ndoc_pres <- ndoc_pres %>% 
   right_join(party_df, by = c("last_name" = "last_name")) #Cleveland has two nonconsecutive terms
+
 
 # Traducir el nombre de partidos a español
 ndoc_pres <- ndoc_pres %>% 
@@ -308,6 +310,7 @@ ndoc_pres <- ndoc_pres %>%
 
 #Eliminar Cleveland que esta repetido
 ndoc_pres = ndoc_pres[ndoc_pres$last_name!="Cleveland (second term)",]
+ndoc_pres = ndoc_pres[ndoc_pres$speaker!="Hillary Clinton",]
 
 #Nos quedamos con top 15
 top15_df <- ndoc_pres %>% 

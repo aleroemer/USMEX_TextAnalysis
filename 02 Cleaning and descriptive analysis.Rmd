@@ -225,9 +225,12 @@ counts_year[counts_year$country=='MEXICO',] %>%
   geom_vline(aes(xintercept = 1847.5), linetype = "dotted", color = COLOR)+   
   annotate("text", x=1827, y=Y_VAL, label="1848 - Fin de Guerra \nMéxico-Americana ", color = COLOR, size = SIZE)+
   geom_vline(aes(xintercept = 1864), linetype = "dotted", color = COLOR)+   
-  annotate("text", x=1872, y=Y_VAL, label="1862 - \n                         Maximiliano en México", color = COLOR, size = SIZE)+
-  geom_vline(aes(xintercept = 1923), linetype = "dotted", color = COLOR) +   
-  annotate("text", x=1937, y=Y_VAL, label="1923 - \nSuspensión \nde relaciones \ndiplomáticas", color = COLOR, size = SIZE) +
+  annotate("text", x=1876, y=Y_VAL, label="1862 - \nMaximiliano", color = COLOR, size = SIZE)+
+   geom_vline(aes(xintercept = 1910), linetype = "dotted", color = COLOR)+   
+  annotate("text", x=1920, y=Y_VAL, label="1910-1917 \nRevolución", color = COLOR, size = SIZE)+
+  geom_vline(aes(xintercept = 1917), linetype = "dotted", color = COLOR)+ 
+  #geom_vline(aes(xintercept = 1923), linetype = "dotted", color = COLOR) +   
+  #annotate("text", x=1937, y=Y_VAL, label="1923 - \nSuspensión \nde relaciones \ndiplomáticas", color = COLOR, size = SIZE) +
   geom_vline(aes(xintercept = 1993), linetype = "dotted", color = COLOR) +   
   annotate("text", x=1985, y=Y_VAL, label="1993 - \nTLCAN", color = COLOR, size = SIZE) +
   geom_vline(aes(xintercept = 2017), linetype = "dotted", color = COLOR) +   
@@ -256,10 +259,13 @@ counts_year[counts_year$country=='MEXICO',] %>%
   geom_hline(yintercept = mean(counts_year[counts_year$country=='MEXICO','share']), color = 'red') +
   geom_vline(aes(xintercept = 1847.5), linetype = "dotted", color = COLOR)+   
   annotate("text", x=1827, y=Y_VAL, label="1848 - Fin de Guerra \nMéxico-Americana ", color = COLOR, size = SIZE)+
-  geom_vline(aes(xintercept = 1864), linetype = "dotted", color = COLOR)+   
-  annotate("text", x=1872, y=Y_VAL, label="1862 - \n                         Maximiliano en México", color = COLOR, size = SIZE)+
-  geom_vline(aes(xintercept = 1923), linetype = "dotted", color = COLOR) +   
-  annotate("text", x=1937, y=Y_VAL, label="1923 - \nSuspensión \nde relaciones \ndiplomáticas", color = COLOR, size = SIZE) +
+  geom_vline(aes(xintercept = 1865), linetype = "dotted", color = COLOR)+   
+  annotate("text", x=1876, y=Y_VAL, label="1862 - \nMaximiliano", color = COLOR, size = SIZE)+
+  geom_vline(aes(xintercept = 1910), linetype = "dotted", color = COLOR)+   
+  annotate("text", x=1920, y=Y_VAL, label="1910-1917 \nRevolución", color = COLOR, size = SIZE)+
+   geom_vline(aes(xintercept = 1917), linetype = "dotted", color = COLOR)+   
+  #geom_vline(aes(xintercept = 1923), linetype = "dotted", color = COLOR) +   
+  #annotate("text", x=1945, y=Y_VAL, label="1923 - Suspensión \nrelaciones diplomáticas", color = COLOR, size = SIZE) +
   geom_vline(aes(xintercept = 1993), linetype = "dotted", color = COLOR) +   
   annotate("text", x=1985, y=Y_VAL, label="1993 - \nTLCAN", color = COLOR, size = SIZE) +
   geom_vline(aes(xintercept = 2017), linetype = "dotted", color = COLOR) +   
@@ -269,6 +275,7 @@ counts_year[counts_year$country=='MEXICO',] %>%
        y = "", 
        x = "", 
        caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
+
 ```
 
 ### G. Mexico mentions by president
@@ -317,7 +324,7 @@ top15_df <- ndoc_pres %>%
 top15_df %>% 
   ggplot(aes(x = fct_reorder(last_name, n_docs), y = n_docs, fill = Partido))+
   geom_col()+
-  geom_text(aes(label = n_docs), vjust = 0.5) +
+  geom_text(aes(label = n_docs), vjust = 0.5, nudge_y = 25) +
   theme_bw()+
   scale_y_continuous(breaks = pretty_breaks(n = 10))+
   scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
@@ -342,7 +349,7 @@ top15_df <- ndoc_pres %>%
 top15_df %>% 
   ggplot(aes(x = fct_reorder(last_name, share), y = share, fill = Partido))+
   geom_col()+
-  geom_text(aes(label = share), vjust = 0.5) +
+  geom_text(aes(label = round(share,2)), vjust = 0.5, nudge_y = 1) +
   theme_bw()+
   scale_y_continuous(breaks = pretty_breaks(n = 10))+
   scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+

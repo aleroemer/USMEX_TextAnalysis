@@ -70,10 +70,12 @@ current_country = 'MEXICO'
 
 #Create unique text ID column
 trade_partners_lst[[current_country]] = create_unique_id(current_country)
+country_df = trade_partners_lst[[current_country]]
+save(country_df, file = paste0(CLEAN_DATA_PATH, "clean_articles_", current_country))
 
 #Create a paragraph df with only paragraphs that mention MEXICO
 paragraphs_df = separate_text_into_paragraphs(country = current_country)
-save(paragraphs_df, file = paste0(CLEAN_DATA_PATH, "paragraphs_", 'MEXICO'))
+save(paragraphs_df, file = paste0(CLEAN_DATA_PATH, "paragraphs_", current_country))
 
 tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
 
@@ -151,11 +153,52 @@ add_annotations_to_mx_time_series_plot(plot,
                                        bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
 ```
 
-### D. Sentiment analysis using sentiment.ai
+### D. MEXICO: Sentiment analysis using Python's flair
 
-```{r}
-asdsad
+```{python}
+import pyreadr #'!pip3 install pyreadr'
+from utils.python_utils import analyze_paragraphs_sentiment
 
+CLEAN_DATA_PATH = '../data/clean/'
+
+# Load all articles
+articles_df = pyreadr.read_r(CLEAN_DATA_PATH + "clean_articles_MEXICO")['country_df']
+paragraphs_df = pyreadr.read_r(CLEAN_DATA_PATH + 'paragraphs_MEXICO')['paragraphs_df']
+
+# Add sentiment columns to our dataframe
+paragraphs_df = analyze_paragraphs_sentiment(paragraphs_df)
+paragraphs_df.to_csv(CLEAN_DATA_PATH + "paragraphs_sentiment_" + 'MEXICO')
+```
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Add the date to the df
+paragraphs_df = paragraphs_df.merge(articles_df[['date', 'text_ID']], on='text_ID', how='left')
+paragraphs_df.date = pd.to_datetime(paragraphs_df['date'])
+paragraphs_df['year'] = paragraphs_df['date'].dt.year
+```
+
+
+```{python}
+# % of positive sentiments in 
+for start_year in [1800,1900, 1950, 1980]:
+  groupby_temp = paragraphs_df.groupby('year')['sentiment_label_is_positive'].mean()
+  
+  groupby_temp[groupby_temp.index>start_year].plot()
+  plt.show()
+```
+
+
+
+```{python}
+# raw number of positive sentiments in 
+for start_year in [1800,1900, 1950, 1980]:
+  groupby_temp = paragraphs_df.groupby('year')['sentiment_label_is_positive'].sum()
+  
+  groupby_temp[groupby_temp.index>start_year].plot()
+  plt.show()
 ```
 
 # V. key words in context (kwic)

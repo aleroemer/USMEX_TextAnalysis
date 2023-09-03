@@ -169,7 +169,7 @@ for (start_year in c(1800,1900, 1950, 1980)){
     scale_x_continuous(breaks = pretty_breaks(n = 10))+
     scale_y_continuous(breaks = pretty_breaks(n = 5))+
     theme(axis.text.x = element_text(angle = 0, vjust = .7))+
-    labs(title = '" ',
+    labs(title = '¿Cuánto Menciona EEUU a sus socios comerciales?',
          subtitle = "",
          y = "", 
          x = "", 
@@ -193,8 +193,6 @@ counts_since2010 <- counts_since2010 %>%
     country == "GERMANY" ~ "ALEMANIA", 
     country == "CHINA" ~ "CHINA",
   ))
-
-
 
 ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=pais)) +
   geom_bar(stat = "identity") +

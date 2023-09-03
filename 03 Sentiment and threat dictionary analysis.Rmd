@@ -104,6 +104,30 @@ tokens_df %>%
        x = "", y = "Frequency", 
        caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
 ```
+#### Hacer lo mismo pero por partido
+```{r}
+#changed formula of split_into_paragraphs AR
+
+tokens_df %>% 
+  filter(threat_feature == 1) %>% 
+  group_by(last_name) %>% 
+  summarise()
+  count(word_tokens) %>% 
+  arrange(desc(n)) %>%
+  head(20) %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n), n))+
+  geom_col(fill = "lightblue")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_y_continuous(breaks = seq(0,2000,100))+
+  labs(title = 'Most common features from "threat dictionary"',
+       x = "", y = "Frequency", 
+       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
+```
+
+
+#### Hacer lo mismo pero por presidente
+
 
 #### iii. MEXICO: Threat words over time
 

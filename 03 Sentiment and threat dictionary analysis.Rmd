@@ -109,15 +109,26 @@ tokens_df %>%
 #changed formula of split_into_paragraphs AR
 
 tokens_df %>% 
-  filter(threat_feature == 1) %>% 
-  group_by(last_name) %>% 
-  summarise()
-  count(word_tokens) %>% 
+  count(Party)
+
+total_toks_dem <- 500434
+total_toks_rep <- 504478
+
+threat_party <- tokens_df %>% 
+  filter(threat_feature == 1) %>%
+  group_by(Party, word_tokens) %>% 
+  summarise(n = n())%>% 
+  ungroup() %>% 
   arrange(desc(n)) %>%
-  head(20) %>% 
-  ggplot(aes(x = fct_reorder(word_tokens,n), n))+
-  geom_col(fill = "lightblue")+
+  head(20) 
+
+  threat_party %>% 
+  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
+                              round(n/total_toks_rep,3))) %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
+  geom_col(position = "dodge2") +
   theme_bw()+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
   scale_y_continuous(breaks = seq(0,2000,100))+
   labs(title = 'Most common features from "threat dictionary"',

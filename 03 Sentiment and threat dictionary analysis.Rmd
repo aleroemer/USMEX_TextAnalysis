@@ -134,6 +134,12 @@ groupby_temp$threat_per_doc = groupby_temp$total_threat_tokens/groupby_temp$tota
 ```
 
 ```{r}
+
+#Analyzing top threat_per_token years: 
+groupby_temp %>% 
+  arrange(desc(threat_per_token)) %>% 
+  head(10)
+
 plot = groupby_temp %>% 
   ggplot(aes(x = year, y = threat_per_token))
 add_annotations_to_mx_time_series_plot(plot, 
@@ -141,6 +147,9 @@ add_annotations_to_mx_time_series_plot(plot,
                                        plot_title = '# of threat words per token',
                                        text_y_val = 0.03,
                                        bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
+
+#tarea ale: explorar top picos... probablemente tengamos que cambiar los labels. 
+
 ```
 
 ```{r}

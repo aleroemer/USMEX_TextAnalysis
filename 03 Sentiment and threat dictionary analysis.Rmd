@@ -57,6 +57,13 @@ load(paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
 threat_dict <- read.delim(paste0(DATA_PATH, "threat.txt"),
                           header = FALSE) %>% 
   rename(threat_features = V1)
+
+extra_words <- tibble(
+  threat_features = c("addiction","overdose", "poison", "poisoning",
+                      "gang", "gangs", "cartel", "addict", "addicts", "dealer"))
+
+threat_dict <- threat_dict %>% 
+  rbind(extra_words)
 ```
 
 ### C. Threat dictionary analysis (Choi et al. (2022))
@@ -92,6 +99,7 @@ tokens_df$count = 1
 ```{r}
 tokens_df %>% 
   filter(threat_feature == 1) %>% 
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens)) %>% #debemos juntar problem y problems
   count(word_tokens) %>% 
   arrange(desc(n)) %>%
   head(20) %>% 
@@ -102,7 +110,7 @@ tokens_df %>%
   scale_y_continuous(breaks = seq(0,2000,100))+
   labs(title = 'Most common features from "threat dictionary"',
        x = "", y = "Frequency", 
-       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
+       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119') 
 ```
 #### Hacer lo mismo pero por partido
 ```{r}
@@ -111,20 +119,23 @@ tokens_df %>%
 tokens_df %>% 
   count(Party)
 
+#Contando total de tokens por partido
 total_toks_dem <- 500434
-total_toks_rep <- 504478
+total_toks_rep <- 504478 
 
 threat_party <- tokens_df %>% 
   filter(threat_feature == 1) %>%
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
   group_by(Party, word_tokens) %>% 
   summarise(n = n())%>% 
   ungroup() %>% 
-  arrange(desc(n)) %>%
-  head(20) 
+  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
+                                round(n/total_toks_rep,3))) %>% 
+  arrange(desc(n_weighted)) %>%
+  head(25) 
 
   threat_party %>% 
-  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
-                              round(n/total_toks_rep,3))) %>% 
   ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
   geom_col(position = "dodge2") +
   theme_bw()+

@@ -99,7 +99,8 @@ tokens_df$count = 1
 ```{r}
 tokens_df %>% 
   filter(threat_feature == 1) %>% 
-  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens)) %>% #debemos juntar problem y problems
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
   count(word_tokens) %>% 
   arrange(desc(n)) %>%
   head(20) %>% 
@@ -115,39 +116,9 @@ tokens_df %>%
 #### Hacer lo mismo pero por partido
 ```{r}
 #changed formula of split_into_paragraphs AR
-tokens_df %>% 
-  count(Party)
-
 ##### Contando total de tokens por partido
-#
-#total_toks_dem <- 500434
-#total_toks_rep <- 504478 
-#
-#threat_party <- tokens_df %>% 
-#  filter(threat_feature == 1) %>%
-#  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
-#         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
-#  group_by(Party, word_tokens) %>% 
-#  summarise(n = n())%>% 
-#  ungroup() %>% 
-#  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
-#                                round(n/total_toks_rep,3))) %>% 
-#  arrange(desc(n_weighted)) %>%
-#  head(25) 
-#
-#  threat_party %>% 
-#  ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
-#  geom_col(position = "dodge2") +
-#  theme_bw()+
-#  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
-#  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-#  labs(title = 'Most common features from "threat dictionary"',
-#       x = "", y = "Frequency", 
-#       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
-#  
 
-
-##### Crudo
+## Crudo
 
  tokens_df %>% 
   filter(threat_feature == 1) %>%
@@ -166,6 +137,39 @@ tokens_df %>%
   labs(title = 'Most common features from "threat dictionary"',
        x = "", y = "Frequency", 
        caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
+ 
+ 
+### Ponderando por número total de tokens por partido 
+tokens_df %>% 
+  count(Party) 
+
+total_toks_dem <- 500434
+total_toks_rep <- 504478 
+
+threat_party <- tokens_df %>% 
+  filter(threat_feature == 1) %>%
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  group_by(Party, word_tokens) %>% 
+  summarise(n = n())%>% 
+  ungroup() %>% 
+  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
+                                round(n/total_toks_rep,3))) %>% 
+  arrange(desc(n_weighted)) %>%
+  head(25) 
+
+  threat_party %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
+  geom_col(position = "dodge2") +
+  theme_bw()+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  labs(title = 'Most common features from "threat dictionary"',
+       x = "", y = "Frequency", 
+       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
+  
+  
+  #maybe if I filter post 1950?
   
   
 ```

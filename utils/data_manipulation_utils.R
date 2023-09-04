@@ -156,7 +156,7 @@ separate_text_into_paragraphs <- function(country){
     unnest(text_paragraph) %>% 
     filter(text_paragraph != "") %>%
     filter(str_detect(text_paragraph, country)) %>% 
-    select(text_ID, text_paragraph, last_name, President, Party) #agregué last_name, president, party
+    select(text_ID, text_paragraph, last_name, President, Party) # AR: agregué last_name, president, party
   
   # Assign each paragraph to a unique ID
   paragraphs_df <- paragraphs_df %>% 

@@ -1,0 +1,41 @@
+---
+title: "04 wordclouds"
+output: pdf_document
+date: "2023-09-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(wordcloud2)
+library(tvthemes)
+```
+
+```{r}
+rm(list = ls())
+
+if (Sys.info()["user"]=='hugosalas'){
+  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+} else if (Sys.info()["user"]=='aleroemer'){
+  BASE_PATH = "~/My Drive/DiscursoUSA_MX/"
+}
+
+DATA_PATH =  paste0(BASE_PATH, "data/")
+CLEAN_DATA_PATH = paste0(DATA_PATH, "clean/")
+UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
+
+source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
+```
+
+### B. Load all relevant files and DF
+
+```{r}
+load(paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
+
+```
+
+

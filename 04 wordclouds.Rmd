@@ -187,5 +187,7 @@ wordcloud(words = df$word,
           mask = img,  # Use the inverted image as mask
           borderColor = "black",  # Color of the outline
           borderWidth = 2)  # Width of the outline
+
+wordcloud2(df, size = 1, figPath = "images/trump.png" )
 ```
 

@@ -34,8 +34,18 @@ source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
 ### B. Load all relevant files and DF
 
 ```{r}
-load(paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
-
+load(paste0(CLEAN_DATA_PATH, "paragraphs_MEXICO"))
 ```
 
+### C. Tokenize Paragraphs that mention Mexico
+```{r}
+tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
+
+#eliminate stopwords
+data(stop_words)
+
+# Assuming your dataframe is called 'df' and the column containing the tokens is called 'word_tokens'
+tokens_df_nosw <- tokens_df %>%
+  anti_join(stop_words, by = c("word_tokens" = "word"))
+```
 

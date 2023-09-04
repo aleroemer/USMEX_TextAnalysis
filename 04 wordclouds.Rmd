@@ -177,8 +177,6 @@ wordcloud(words = df$word,
           scale = c(4, 0.5),  # Adjust the scale as needed
           mask = img)  # Use the inverted image as mask
 
-
-
 wordcloud(words = df$word,
           freq = df$freq, min.freq = 1,           
           max.words = 200, 

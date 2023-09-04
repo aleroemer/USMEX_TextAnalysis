@@ -86,6 +86,11 @@ save(paragraphs_df, file = paste0(CLEAN_DATA_PATH, "paragraphs_", current_countr
 
 tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
 
+# Eliminate stopwords
+data(stop_words)
+tokens_df_nosw <- tokens_df %>%
+  anti_join(stop_words, by = c("word_tokens" = "word"))
+
 # Identify threat tokens
 tokens_df <- tokens_df %>% 
   mutate(threat_feature = if_else(word_tokens %in% threat_dict$threat_features, 1, 0))

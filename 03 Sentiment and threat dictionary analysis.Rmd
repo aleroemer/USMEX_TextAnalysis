@@ -119,7 +119,6 @@ tokens_df %>%
 ##### Contando total de tokens por partido
 
 ## Crudo
-
  tokens_df %>% 
   filter(threat_feature == 1) %>%
   mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
@@ -191,6 +190,8 @@ trade_partners_lst[[current_country]] <- trade_partners_lst[[current_country]] %
   left_join(agg_threats, by = c("text_ID" = "text_ID")) %>%
   mutate(n_threat_tokens = if_else(is.na(n_threat_tokens), 0, n_threat_tokens),
          n_tokens = if_else(is.na(n_tokens), 0, n_tokens))
+
+trade_partners_lst$MEXICO
 
 trade_partners_lst[[current_country]]$count = 1
 

@@ -13,6 +13,8 @@ library(tidyverse)
 library(tidytext)
 library(wordcloud2)
 library(tvthemes)
+library(wordcloud)
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -93,10 +95,87 @@ wordcloud2(data = trump_wcloud, size = 1, color = "random-light",
 wordcloud2(data = trump_wcloud, size = 1, color = "random-light",
            backgroundColor = "white",
            fontFamily = "Roboto Condensed",
-          #figPath = "images/trump.png",
+           figPath = "images/trump.png",
            gridSize = 100, minRotation = -pi/2, maxRotation = pi/2,
            ellipticity = 0.5, shuffle = TRUE)
           # shapeImage = img)
 
+```
+
+## Second try
+
+```{r, warning=F}
+library(tm)
+
+# Create a vector containing only the text
+trump_text <- tokens_df_nosw %>%
+  filter(last_name == "Trump")
+
+trump_text <- trump_text$word_tokens
+
+# Create a corpus
+docs <- Corpus(VectorSource(trump_text))
+
+docs <- docs %>%
+  tm_map(removeNumbers) %>%
+  tm_map(removePunctuation) %>%
+  tm_map(stripWhitespace)
+docs <- tm_map(docs, content_transformer(tolower))
+docs <- tm_map(docs, removeWords, stopwords("english"))
+
+# Create a document-term-matrix
+dtm <- TermDocumentMatrix(docs) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df <- data.frame(word = names(words),freq=words)
+
+exclude = c("mexico", "u.s", "canada", "applause", "united")
+
+df <- df %>% filter(!(word %in% exclude))
+
+# Wordcloud
+
+set.seed(1234) # for reproducibility 
+wordcloud(words = df$word,
+          freq = df$freq, min.freq = 1,           
+          max.words=200, 
+          random.order=FALSE, 
+          rot.per=0.35,  
+          colors=brewer.pal(8, "Dark2"))
+
+
+wordcloud(words = df$word,
+          freq = df$freq, min.freq = 1,           
+          max.words = 200, 
+          random.order = FALSE, 
+          rot.per = 0.35,  
+          colors = c("#006847", "#ED2939"),  # Colors of Mexico's flag
+          scale = c(4, 0.5),  # Adjust the scale as needed
+          mask = readPNG("images/trump.png"))  # Path to the image file
+
+#wordcloud2(word,figPath = "images/trump.png",size = 1.3,
+           #color = rep(cols(7),nrow(aang_words)),backgroundColor = "#ece5d3")
+
+```
+
+### other try
+
+```{r, warning = false}
+library(png)
+
+# Read the image file and invert its colors
+img <- readPNG("images/trump.png")
+img[img == 0] <- 1
+img[img == 255] <- 0
+
+# Create the word cloud with the inverted image as mask
+wordcloud(words = df$word,
+          freq = df$freq, min.freq = 1,           
+          max.words = 200, 
+          random.order = FALSE, 
+          rot.per = 0.35,  
+          colors = c("#006847", "#ED2939"),  # Colors of Mexico's flag
+          scale = c(4, 0.5),  # Adjust the scale as needed
+          mask = img)  # Use the inverted image as mask
 ```
 

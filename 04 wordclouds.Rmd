@@ -93,12 +93,11 @@ wordcloud2(data = trump_wcloud, size = 1, color = "random-light",
            shapeImage = img)
 
 wordcloud2(data = trump_wcloud, size = 1, color = "random-light",
-           backgroundColor = "white",
-           fontFamily = "Roboto Condensed",
+           backgroundColor = "green",
            figPath = "images/trump.png",
            gridSize = 100, minRotation = -pi/2, maxRotation = pi/2,
            ellipticity = 0.5, shuffle = TRUE)
-          # shapeImage = img)
+           
 
 ```
 
@@ -165,8 +164,8 @@ library(png)
 
 # Read the image file and invert its colors
 img <- readPNG("images/trump.png")
-img[img == 0] <- 1
-img[img == 255] <- 0
+#img[img == 0] <- 1
+#img[img == 255] <- 0
 
 # Create the word cloud with the inverted image as mask
 wordcloud(words = df$word,
@@ -177,5 +176,18 @@ wordcloud(words = df$word,
           colors = c("#006847", "#ED2939"),  # Colors of Mexico's flag
           scale = c(4, 0.5),  # Adjust the scale as needed
           mask = img)  # Use the inverted image as mask
+
+
+
+wordcloud(words = df$word,
+          freq = df$freq, min.freq = 1,           
+          max.words = 200, 
+          random.order = FALSE, 
+          rot.per = 0.35,  
+          colors = c("#006847", "#ED2939"),  # Colors of Mexico's flag
+          scale = c(4, 0.5),  # Adjust the scale as needed
+          mask = img,  # Use the inverted image as mask
+          borderColor = "black",  # Color of the outline
+          borderWidth = 2)  # Width of the outline
 ```
 

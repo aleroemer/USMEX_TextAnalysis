@@ -92,7 +92,7 @@ tokens_df_nosw <- tokens_df %>%
   anti_join(stop_words, by = c("word_tokens" = "word"))
 
 # Identify threat tokens
-tokens_df <- tokens_df %>% 
+tokens_df <- tokens_df_nosw %>% 
   mutate(threat_feature = if_else(word_tokens %in% threat_dict$threat_features, 1, 0))
 
 # Count all tokens
@@ -224,8 +224,8 @@ add_annotations_to_mx_time_series_plot(plot,
 tokens_df %>% 
   count(Party) 
 
-total_toks_dem <- 500434
-total_toks_rep <- 504478 
+total_toks_dem <- 205798
+total_toks_rep <- 196421	 
 
 threat_party <- tokens_df %>% 
   filter(threat_feature == 1) %>%

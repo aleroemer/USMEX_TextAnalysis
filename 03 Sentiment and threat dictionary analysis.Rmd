@@ -112,11 +112,31 @@ tokens_df %>%
   labs(title = 'Most common features from "threat dictionary"',
        x = "", y = "Frequency", 
        caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119') 
+
+
+# What if we filter post 1950? 
+tokens_df %>% 
+  filter(threat_feature == 1, year >= 1950) %>% 
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  count(word_tokens) %>% 
+  arrange(desc(n)) %>%
+  head(20) %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n), n))+
+  geom_col(fill = "lightblue")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  scale_y_continuous(breaks = seq(0,2000,100))+
+  labs(title = 'Most common features from "threat dictionary"',
+       x = "", y = "Frequency", 
+       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119') 
+
 ```
 
 
 #### iii. MEXICO: Threat words over time
 
+AR: Pero esto 
 ```{r}
 # Aggregate by text
 agg_threats <- tokens_df %>%
@@ -169,7 +189,6 @@ add_annotations_to_mx_time_series_plot(plot,
                                        plot_title = '# of threat words per doc',
                                        bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
 ```
-
 
 #### iv. MEXICO: Threat words by Party
 ```{r}
@@ -226,9 +245,31 @@ threat_party <- tokens_df %>%
        caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
   
   
-  #maybe if I filter post 1950?
+#maybe if I filter post 1950?
+ threat_party_post1950 <- tokens_df %>% 
+  filter(threat_feature == 1, 
+         year >= 1950) %>%
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  group_by(Party, word_tokens) %>% 
+  summarise(n = n())%>% 
+  ungroup() %>% 
+  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
+                                round(n/total_toks_rep,3))) %>% 
+  arrange(desc(n_weighted)) %>%
+  head(25) 
+
+  threat_party_post1950 %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
+  geom_col(position = "dodge2") +
+  theme_bw()+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
+  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+  labs(title = 'Most common features from "threat dictionary"',
+       x = "", y = "Frequency", 
+       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
   
-  
+
 ```
 
 

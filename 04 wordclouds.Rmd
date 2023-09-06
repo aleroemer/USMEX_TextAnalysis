@@ -52,56 +52,7 @@ tokens_df_nosw <- tokens_df %>%
 ```
 
 
-### Trump Wordcloud
-```{r}
-#cols <- avatar_pal(palette = "AirNomads",n = 7)
-
-exclude = c("mexico", "u.s", "canada", "applause", "united")
-
-trump_wcloud <- tokens_df_nosw %>%
-  filter(last_name == "Trump") %>%
-  count(word_tokens) %>%
-  arrange(desc(n)) %>%
-  filter(n > 1) %>%
-  rename(freq = n) %>% 
-  filter(!(word_tokens %in% exclude))
-
-wordcloud2(trump_wcloud,figPath = "images/trump.png",size = 1,
-           backgroundColor = "#ece5d3")
-
-cols <- avatar_pal(palette = "AirNomads",n = 7)
-wordcloud2(trump_wcloud,figPath = "images/trump.png",size = 1.3,
-           color = rep(cols(7),nrow(trump_wcloud)),backgroundColor = "#ece5d3")
-
-
-
-library(wordcloud2)
-library(png)
-
-# Read the image file
-img <- readPNG("images/trump.png")
-
-# Create a wordcloud with image mask
-wordcloud2(data = trump_wcloud, size = 1, color = "random-light",
-           backgroundColor = "white", shape = "circle",
-           fontFamily = "Roboto Condensed",
-           figPath = "images/trump.png",
-           rotateRatio = 0.5, rotateSteps = 2,
-           gridSize = 100, minRotation = -pi/2, maxRotation = pi/2,
-           ellipticity = 0.5, shuffle = TRUE,
-           rotateRatio = 0.5, rotateSteps = 2,
-           shapeImage = img)
-
-wordcloud2(data = trump_wcloud, size = 1, color = "random-light",
-           backgroundColor = "green",
-           figPath = "images/trump.png",
-           gridSize = 100, minRotation = -pi/2, maxRotation = pi/2,
-           ellipticity = 0.5, shuffle = TRUE)
-           
-
-```
-
-## Second try
+## Second try, different method
 
 ```{r, warning=F}
 library(tm)
@@ -126,9 +77,10 @@ docs <- tm_map(docs, removeWords, stopwords("english"))
 dtm <- TermDocumentMatrix(docs) 
 matrix <- as.matrix(dtm) 
 words <- sort(rowSums(matrix),decreasing=TRUE) 
-df <- data.frame(word = names(words),freq=words)
+df <- data.frame(word = names(words),freq=words) %>% 
+  filter(freq > 1)
 
-exclude = c("mexico", "u.s", "canada", "applause", "united")
+exclude = c("mexico", "u.s", "canada", "applause", "united", "president")
 
 df <- df %>% filter(!(word %in% exclude))
 

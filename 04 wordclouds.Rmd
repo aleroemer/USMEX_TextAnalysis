@@ -143,3 +143,5 @@ wordcloud(words = df$word,
 wordcloud2(df, size = 1, figPath = "images/trump.png" )
 ```
 
+
+

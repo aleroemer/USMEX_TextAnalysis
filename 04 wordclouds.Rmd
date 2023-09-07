@@ -233,7 +233,12 @@ wordcloud2(biden_wcloud, size = 1, color = rep(c("#006847", "#ED2939"),2228))
 
 wordcloud2(biden_wcloud, size = 1,figPath = "images/biden1.jpeg", color = rep(c("#006847", "#ED2939"),2228))
 wordcloud2(biden_wcloud, size = 1,figPath = "images/biden2.jpeg", color = rep(c("#006847", "#ED2939"),2228))#not good
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden3.jpeg", color = rep(c("#006847", "#ED2939"),2228))#not good
 wordcloud2(biden_wcloud, size = 1,figPath = "images/biden5.jpeg", color = rep(c("#006847", "#ED2939"),2228))#not good
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden7.jpeg", color = rep(c("#006847", "#ED2939"),2228))#not good
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden9.jpeg", color = rep(c("#006847", "#ED2939"),2228)) #not good
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden10.jpeg", color = rep(c("#006847", "#ED2939"),2228))#possible
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden11.jpeg", color = rep(c("#006847", "#ED2939"),2228))#possible
 
 wordcloud2(biden_wcloud, 
            minSize = 1.3,

@@ -57,7 +57,7 @@ tokens_df_nosw <- tokens_df %>%
 ```{r}
 #cols <- avatar_pal(palette = "AirNomads",n = 7)
 
-exclude = c("mexico", "u.s", "canada", "applause", "united", "trump")
+exclude = c("mexico", "u.s", "canada", "applause", "united", "trump", "president")
 
 trump_wcloud <- tokens_df_nosw %>%
   filter(last_name == "Trump") %>%
@@ -94,15 +94,156 @@ wordcloud2(trump_wcloud,
            figPath = "images/trump2.png",
            color = rep(c("#006847", "#ED2939"),2228))
 
+#lettercloud
+letterCloud(trump_wcloud, word = "TRUMP", color = rep(c("#006847", "#ED2939"),2228))
+
+# Save image
+
 ```
 
 
 
+# Obama's Wordcloud
 
 
+```{r}
+set.seed(9413)
+
+exclude = c("mexico", "u.s", "canada", "applause", "united", "obama", "president", "el")
+
+obama_wcloud <- tokens_df_nosw %>%
+  filter(last_name == "Obama") %>%
+  count(word_tokens) %>%
+  arrange(desc(n)) %>%
+  filter(n > 1) %>%
+  rename(freq = n) %>% 
+  filter(!(word_tokens %in% exclude))
+
+obama_wcloud <- obama_wcloud %>% 
+  filter(!str_detect(word_tokens, "\\d")) #eliminate numbers
+
+### Without shape
+wordcloud2(obama_wcloud,size = 1)
+
+### With colors of Mexican flag
+wordcloud2(obama_wcloud, size = 1, color = rep(c("#006847", "#ED2939"),2228))
+
+### With Obama's image as shape -- can't get it to work
+
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama1.png", color = rep(c("#006847", "#ED2939"),2228))
 
 
+# with different images - Run in console**
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama1.png", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama2.png", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama3.png", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama4.png", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama5.jpeg", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama6.jpeg", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(obama_wcloud, size = 1,figPath = "images/obama7.jpeg", color = rep(c("#006847", "#ED2939"),2228))
+# eliminate 
+wordcloud2(obama_wcloud, 
+           size = 1.3,
+           figPath = "images/obama1.png",
+           color = rep(c("#006847", "#ED2939"),2228))
+
+# lettercloud
+letterCloud(bush_wcloud, word = "W. BUSH", color = rep(c("#006847", "#ED2939"),2228))
+# Save image
+
+```
 
 
+# George W Bush's Wordcloud
+
+```{r}
+set.seed(9413)
+
+exclude = c("mexico", "u.s", "canada", "applause", 
+            "united", "bush", "president", "el", "mcclellan",)
+
+bush_wcloud <- tokens_df_nosw %>%
+  filter(last_name == "W. Bush") %>%
+  count(word_tokens) %>%
+  arrange(desc(n)) %>%
+  filter(n > 1) %>%
+  rename(freq = n) %>% 
+  filter(!(word_tokens %in% exclude))
+
+bush_wcloud <- bush_wcloud %>% 
+  filter(!str_detect(word_tokens, "\\d")) #eliminate numbers
+
+### Without shape
+wordcloud2(bush_wcloud,size = 1)
+
+### With colors of Mexican flag
+wordcloud2(bush_wcloud, size = 1, color = rep(c("#006847", "#ED2939"),2228))
+
+### With Obama's image as shape -- can't get it to work
+
+wordcloud2(bush_wcloud, size = 1,figPath = "images/bush1.png", color = rep(c("#006847", "#ED2939"),2228))
 
 
+# with different images - Run in console**
+wordcloud2(bush_wcloud, size = 1,figPath = "images/bush1.png", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(bush_wcloud, size = 1,figPath = "images/bush2.jpeg", color = rep(c("#006847", "#ED2939"),2228))
+
+
+# eliminate 
+wordcloud2(obama_wcloud, 
+           size = 1.3,
+           figPath = "images/obama1.png",
+           color = rep(c("#006847", "#ED2939"),2228))
+
+
+#lettercloud
+letterCloud(obama_wcloud, word = "OBAMA", color = rep(c("#006847", "#ED2939"),2228))
+
+# Save image
+
+```
+
+
+# Biden's Wordcloud
+
+```{r}
+set.seed(9413)
+
+exclude = c("mexico", "u.s", "canada", "applause", 
+            "united", "biden", "president")
+
+biden_wcloud <- tokens_df_nosw %>%
+  filter(last_name == "Biden") %>%
+  count(word_tokens) %>%
+  arrange(desc(n)) %>%
+  filter(n > 1) %>%
+  rename(freq = n) %>% 
+  filter(!(word_tokens %in% exclude))
+
+biden_wcloud <- biden_wcloud %>% 
+  filter(!str_detect(word_tokens, "\\d")) #eliminate numbers
+
+### Without shape
+wordcloud2(biden_wcloud,size = 1)
+
+### With colors of Mexican flag
+wordcloud2(biden_wcloud, size = 1, color = rep(c("#006847", "#ED2939"),2228))
+
+### With Biden's image as shape -- can't get it to work
+
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden1.jpeg", color = rep(c("#006847", "#ED2939"),2228))
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden2.jpeg", color = rep(c("#006847", "#ED2939"),2228))#not good
+wordcloud2(biden_wcloud, size = 1,figPath = "images/biden5.jpeg", color = rep(c("#006847", "#ED2939"),2228))#not good
+
+wordcloud2(biden_wcloud, 
+           minSize = 1.3,
+           figPath = "images/biden1.jpeg",
+           color = rep(c("#006847", "#ED2939"),2228))
+
+
+#lettercloud
+letterCloud(obama_wcloud, word = "OBAMA", color = rep(c("#006847", "#ED2939"),2228))
+
+# Save image
+
+```

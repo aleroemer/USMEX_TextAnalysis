@@ -57,7 +57,7 @@ tokens_df_nosw <- tokens_df %>%
 ```{r}
 #cols <- avatar_pal(palette = "AirNomads",n = 7)
 
-exclude = c("mexico", "u.s", "canada", "applause", "united", "trump", "president")
+exclude = c("mexico", "u.s", "canada", "applause", "united", "trump", "president", "el")
 
 trump_wcloud <- tokens_df_nosw %>%
   filter(last_name == "Trump") %>%
@@ -148,7 +148,7 @@ wordcloud2(obama_wcloud,
            color = rep(c("#006847", "#ED2939"),2228))
 
 # lettercloud
-letterCloud(bush_wcloud, word = "W. BUSH", color = rep(c("#006847", "#ED2939"),2228))
+letterCloud(obama_wcloud, word = "OBAMA", color = rep(c("#006847", "#ED2939"),2228))
 # Save image
 
 ```
@@ -160,7 +160,7 @@ letterCloud(bush_wcloud, word = "W. BUSH", color = rep(c("#006847", "#ED2939"),2
 set.seed(9413)
 
 exclude = c("mexico", "u.s", "canada", "applause", 
-            "united", "bush", "president", "el", "mcclellan",)
+            "united", "bush", "president", "el", "mcclellan", "scott", "el")
 
 bush_wcloud <- tokens_df_nosw %>%
   filter(last_name == "W. Bush") %>%
@@ -197,7 +197,7 @@ wordcloud2(obama_wcloud,
 
 
 #lettercloud
-letterCloud(obama_wcloud, word = "OBAMA", color = rep(c("#006847", "#ED2939"),2228))
+letterCloud(bush_wcloud, word = "W. BUSH", color = rep(c("#006847", "#ED2939"),2228))
 
 # Save image
 
@@ -210,7 +210,7 @@ letterCloud(obama_wcloud, word = "OBAMA", color = rep(c("#006847", "#ED2939"),22
 set.seed(9413)
 
 exclude = c("mexico", "u.s", "canada", "applause", 
-            "united", "biden", "president")
+            "united", "biden", "president", "el")
 
 biden_wcloud <- tokens_df_nosw %>%
   filter(last_name == "Biden") %>%
@@ -242,12 +242,12 @@ wordcloud2(biden_wcloud, size = 1,figPath = "images/biden11.jpeg", color = rep(c
 
 wordcloud2(biden_wcloud, 
            minSize = 1.3,
-           figPath = "images/biden1.jpeg",
+           figPath = "images/biden11.jpeg",
            color = rep(c("#006847", "#ED2939"),2228))
 
 
 #lettercloud
-letterCloud(obama_wcloud, word = "OBAMA", color = rep(c("#006847", "#ED2939"),2228))
+letterCloud(biden_wcloud, word = "BIDEN", color = rep(c("#006847", "#ED2939"),2228))
 
 # Save image
 

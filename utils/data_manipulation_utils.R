@@ -222,3 +222,63 @@ add_annotations_to_mx_time_series_plot <- function(plot,
   geom_vline(aes(xintercept = 2017), linetype = "dotted", color = text_color) +   
   annotate("text", x=2010, y=text_y_val, label="2017 - \nTrump", color = text_color, size = text_size)
 }
+
+
+#' Create wordcloud data frame for US presidents
+#' 
+#' This function creates a dataframe ready for wordclouds for the president provided 
+#' note: I dont want to create the wordcloud itself within a function because 
+#' every president has its tweaks (i.e. specific words to eliminate)
+#' 
+#' @param president The last name of the president for whom we want a wordcloud
+#' @param exclude_vector Name of the vector of words to exclude
+
+wordcloud_df <- function(president, exclude_vector){
+  tokens_df_nosw %>%
+    filter(last_name == president) %>%
+    count(word_tokens) %>%
+    arrange(desc(n)) %>%
+    filter(n > 1) %>%
+    rename(freq = n) %>% 
+    filter(!(word_tokens %in% exclude_vector)) %>% 
+    filter(!str_detect(word_tokens, "\\d"))
+}
+
+
+#' Create graphs for comparing threat words across parties
+#' 
+#' This function creates a dataframe that aggregates the number of threat words
+#' per party and weighs them as a porcentage of total tokens. 
+#' It also creates the graph. 
+#' 
+ ##create summary table
+threat_party_graphs <- function(year_threshold){
+  total_toks_dem <- 205798
+  total_toks_rep <- 196421	 
+  threat_party <- tokens_df %>% 
+    filter(threat_feature == 1, 
+           year >= year_threshold) %>%
+    mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+           word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+    group_by(Party, word_tokens) %>% 
+    summarise(n = n())%>% 
+    ungroup() %>% 
+    mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
+                                round(n/total_toks_rep*100,3))) %>% 
+    arrange(desc(n_weighted)) %>%
+    head(25) 
+  
+  #create plot
+  plot <-   threat_party %>% 
+    ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
+    geom_col(position = "dodge2") +
+    theme_bw()+
+    scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
+    theme(axis.text.x = element_text(angle = 45, vjust = .7))+
+    labs(title = 'Palabras más comunes del "threat dictionary"',
+         subtitle = paste0("A partir del año ", year_threshold),
+         x = "", y = "Frecuencia", 
+         caption = '*Consular https://www.pnas.org/doi/10.1073/pnas.2113891119')
+ return(plot)
+}
+

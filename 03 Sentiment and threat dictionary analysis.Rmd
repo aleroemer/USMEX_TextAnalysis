@@ -95,6 +95,7 @@ tokens_df_nosw <- tokens_df %>%
 tokens_df <- tokens_df_nosw %>% 
   mutate(threat_feature = if_else(word_tokens %in% threat_dict$threat_features, 1, 0))
 
+rm(tokens_df_nosw)
 # Count all tokens
 tokens_df$count = 1
 ```
@@ -114,9 +115,9 @@ tokens_df %>%
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
   scale_y_continuous(breaks = seq(0,2000,100))+
-  labs(title = 'Most common features from "threat dictionary"',
-       x = "", y = "Frequency", 
-       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119') 
+  labs(title = 'Palabras más comunes del "threat dictionary"',
+       x = "", y = "Frecuencia", 
+       caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119') 
 
 
 # What if we filter post 1950? 
@@ -132,16 +133,16 @@ tokens_df %>%
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
   scale_y_continuous(breaks = seq(0,2000,100))+
-  labs(title = 'Most common features from "threat dictionary"',
-       x = "", y = "Frequency", 
-       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119') 
+  coord_flip() +
+  labs(title = 'Palabras más comunes del "threat dictionary""',
+       x = "", y = "Frecuencia", 
+       caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119') 
+
 
 ```
 
-
 #### iii. MEXICO: Threat words over time
 
-AR: Pero esto 
 ```{r}
 # Aggregate by text
 agg_threats <- tokens_df %>%
@@ -170,17 +171,20 @@ groupby_temp$threat_per_doc = groupby_temp$total_threat_tokens/groupby_temp$tota
 
 ```{r}
 plot = groupby_temp %>% 
-  ggplot(aes(x = year, y = threat_per_token))
-add_annotations_to_mx_time_series_plot(plot, 
+  ggplot(aes(x = year, y = threat_per_token)) #revisar año 1846
+
+  add_annotations_to_mx_time_series_plot(plot, 
                                        text_color = 'purple', 
                                        plot_title = '# of threat words per token',
                                        text_y_val = 0.03,
                                        bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
 
+  
+#### hay un problema con la serie de tiempo!!!
 #tarea ale: explorar top picos... probablemente tengamos que cambiar los labels. 
 #Analyzing top threat_per_token years: 
 groupby_temp %>% 
-  arrange(desc(threat_per_token)) %>% 
+  arrange(desc(threat_per_token)) %>% #algo raro: revisar año 1846
   head(10)
 
 ```
@@ -227,114 +231,22 @@ tokens_df %>%
 total_toks_dem <- 205798
 total_toks_rep <- 196421	 
 
-threat_party <- tokens_df %>% 
-  filter(threat_feature == 1) %>%
-  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
-         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
-  group_by(Party, word_tokens) %>% 
-  summarise(n = n())%>% 
-  ungroup() %>% 
-  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
-                                round(n/total_toks_rep,3))) %>% 
-  arrange(desc(n_weighted)) %>%
-  head(25) 
+threat_party_graphs(1950)
 
-  threat_party %>% 
-  ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
-  geom_col(position = "dodge2") +
-  theme_bw()+
-  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
-  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-  labs(title = 'Most common features from "threat dictionary"',
-       x = "", y = "Frequency", 
-       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
-  
-  
-#maybe if I filter post 1950?
- threat_party_post1950 <- tokens_df %>% 
-  filter(threat_feature == 1, 
-         year >= 1950) %>%
-  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
-         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
-  group_by(Party, word_tokens) %>% 
-  summarise(n = n())%>% 
-  ungroup() %>% 
-  mutate(n_weighted = if_else(Party == "Democratic", round(n/total_toks_dem*100,3),
-                                round(n/total_toks_rep,3))) %>% 
-  arrange(desc(n_weighted)) %>%
-  head(25) 
+#post 1970
+threat_party_graphs(1970)
 
-  threat_party_post1950 %>% 
-  ggplot(aes(x = fct_reorder(word_tokens,n_weighted), y = n_weighted, fill = Party))+ #should normalize by total party tokens
-  geom_col(position = "dodge2") +
-  theme_bw()+
-  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
-  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-  labs(title = 'Most common features from "threat dictionary"',
-       x = "", y = "Frequency", 
-       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
-  
+#post 1990
+threat_party_graphs(1990)
+
+# post 2000
+threat_party_graphs(2000) ### REPUBLICANOS SE CONVIERTEN MUCHO MAS DRASTICOS RELATIVO A DEMOCRATAS
+
 
 ```
-
 
 #### Hacer lo mismo pero por presidente
 
-
-#### iii. MEXICO: Threat words over time
-
-```{r}
-# Aggregate by text
-agg_threats <- tokens_df %>%
-  group_by(text_ID) %>%
-  summarise(n_threat_tokens = sum(threat_feature),
-            n_tokens = sum(count))
-
-trade_partners_lst[[current_country]] <- trade_partners_lst[[current_country]] %>%
-  left_join(agg_threats, by = c("text_ID" = "text_ID")) %>%
-  mutate(n_threat_tokens = if_else(is.na(n_threat_tokens), 0, n_threat_tokens),
-         n_tokens = if_else(is.na(n_tokens), 0, n_tokens))
-
-trade_partners_lst[[current_country]]$count = 1
-
-# Group by year
-groupby_temp <- trade_partners_lst[[current_country]]%>% 
-  group_by(year) %>% 
-  summarise(total_threat_tokens = sum(n_threat_tokens),
-            total_tokens = sum(n_tokens),
-            total_docs = sum(count) )
-
-groupby_temp$threat_per_token = groupby_temp$total_threat_tokens/groupby_temp$total_tokens
-groupby_temp$threat_per_doc = groupby_temp$total_threat_tokens/groupby_temp$total_docs
-  
-```
-
-```{r}
-plot = groupby_temp %>% 
-  ggplot(aes(x = year, y = threat_per_token))
-add_annotations_to_mx_time_series_plot(plot, 
-                                       text_color = 'purple', 
-                                       plot_title = '# of threat words per token',
-                                       text_y_val = 0.03,
-                                       bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
-
-#tarea ale: explorar top picos... probablemente tengamos que cambiar los labels. 
-#Analyzing top threat_per_token years: 
-groupby_temp %>% 
-  arrange(desc(threat_per_token)) %>% 
-  head(10)
-
-```
-
-```{r}
-plot = groupby_temp %>% 
-  ggplot(aes(x = year, y = threat_per_doc))
-
-add_annotations_to_mx_time_series_plot(plot, 
-                                       text_color = 'purple', 
-                                       plot_title = '# of threat words per doc',
-                                       bottom_note_text = '*discursos disponibles en https://www.presidency.ucsb.edu/')
-```
 
 ### D. MEXICO: Sentiment analysis using Python's flair
 

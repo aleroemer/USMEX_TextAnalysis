@@ -278,7 +278,7 @@ threat_party_graphs <- function(year_threshold){
     labs(title = 'Palabras más comunes del "threat dictionary"',
          subtitle = paste0("A partir del año ", year_threshold),
          x = "", y = "Frecuencia", 
-         caption = '*Consular https://www.pnas.org/doi/10.1073/pnas.2113891119')
+         caption = ' subtitle = Como porcentje del total de palabras en párrafos que contienen el término "México"')
  return(plot)
 }
 

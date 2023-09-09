@@ -171,6 +171,19 @@ groupby_temp$threat_per_doc = groupby_temp$total_threat_tokens/groupby_temp$tota
 ```
 
 ```{r}
+groupby_temp %>% 
+  ggplot(aes(x = year, y = threat_per_token)) +
+  geom_line() +
+  theme_test() +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 5))
+
+
+groupby_temp %>% 
+  arrange(desc(threat_per_token)) %>% #algo raro: revisar año 1846
+  head(10)
+
+
 plot = groupby_temp %>% 
   ggplot(aes(x = year, y = threat_per_token)) #revisar año 1846
 

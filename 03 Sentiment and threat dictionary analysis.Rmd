@@ -113,6 +113,7 @@ tokens_df %>%
   ggplot(aes(x = fct_reorder(word_tokens,n), n))+
   geom_col(fill = "lightblue")+
   theme_bw()+
+  coord_flip() +
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
   scale_y_continuous(breaks = seq(0,2000,100))+
   labs(title = 'Palabras más comunes del "threat dictionary"',
@@ -241,11 +242,42 @@ threat_party_graphs(1990)
 
 # post 2000
 threat_party_graphs(2000) ### REPUBLICANOS SE CONVIERTEN MUCHO MAS DRASTICOS RELATIVO A DEMOCRATAS
-
-
 ```
 
-#### Hacer lo mismo pero por presidente
+#### v. Threat words por presidente
+
+```{r, warning=FALSE}
+ threat_pres <- tokens_df %>% 
+  filter(threat_feature == 1) %>%
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  group_by(last_name) %>% 
+  summarise(n_threats = n(),
+            Party = Party)%>% 
+  slice(1) %>% 
+  arrange(desc(n_threats)) 
+  
+ total_tokens_pres<- tokens_df %>% 
+ count(last_name) %>% 
+ rename(total_toks = n)
+  
+ threat_pres <- threat_pres %>% 
+   left_join(total_tokens_pres, by = "last_name") %>% 
+   mutate(n_weighted = round(n_threats/total_toks*100,2)) %>% 
+   head(15)
+ 
+ threat_pres %>% 
+  ggplot(aes(x = fct_reorder(last_name,n_weighted), n_weighted, fill = Party))+
+  geom_col()+
+  theme_bw()+
+  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3)) +
+  labs(title = 'Palabras más comunes del "threat dictionary" por presidente',
+       subtitle = 'Como porcentaje del total de palabras en párrafos que contienen el término "México"',
+       x = "", y = "%", 
+       caption = '*Consultar diccionario https://www.pnas.org/doi/10.1073/pnas.2113891119')+
+    coord_flip()
+
+```
 
 
 ### D. MEXICO: Sentiment analysis using Python's flair

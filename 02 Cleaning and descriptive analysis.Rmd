@@ -199,10 +199,10 @@ ggplot(data = counts_since2010, aes(x = reorder(country, average), y = average, 
   coord_flip() +
   geom_text(data = counts_since2010, aes(x = country, y = average, label = average), vjust = -0.5, color = "black") +
   labs(title = 'Promedio de menciones desde 2010',
-       subtitle = "",
+       subtitle = 'Principales socios comerciales de EEUU',
        y = "", 
-       x = "", 
-       caption = "País")
+       x = "",
+       fill = 'País')
 ```
 
 ### F. Mexico mentions by year

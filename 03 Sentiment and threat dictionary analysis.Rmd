@@ -120,26 +120,21 @@ tokens_df %>%
        x = "", y = "Frecuencia", 
        caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119') 
 
-
+#none of these filters change the words too much
 # What if we filter post 1950? 
-tokens_df %>% 
-  filter(threat_feature == 1, year >= 1950) %>% 
-  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
-         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
-  count(word_tokens) %>% 
-  arrange(desc(n)) %>%
-  head(20) %>% 
-  ggplot(aes(x = fct_reorder(word_tokens,n), n))+
-  geom_col(fill = "lightblue")+
-  theme_bw()+
-  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-  scale_y_continuous(breaks = seq(0,2000,100))+
-  coord_flip() +
-  labs(title = 'Palabras más comunes del "threat dictionary""',
-       x = "", y = "Frecuencia", 
-       caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119') 
+threat_words_count_year(1950)
 
+# 1970?
+threat_words_count_year(1970)
 
+# 1990?
+threat_words_count_year(1990)
+
+#2000?
+threat_words_count_year(2000)
+
+#2010?
+threat_words_count_year(2010)
 ```
 
 #### iii. MEXICO: Threat words over time
@@ -174,7 +169,7 @@ groupby_temp$threat_per_doc = groupby_temp$total_threat_tokens/groupby_temp$tota
 groupby_temp %>% 
   ggplot(aes(x = year, y = threat_per_token)) +
   geom_line() +
-  theme_test() +
+  theme_bw() +
   scale_x_continuous(breaks = pretty_breaks(n = 10)) +
   scale_y_continuous(breaks = pretty_breaks(n = 5))
 
@@ -233,9 +228,9 @@ add_annotations_to_mx_time_series_plot(plot,
   theme_bw()+
   scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-  labs(title = 'Most common features from "threat dictionary"',
-       x = "", y = "Frequency", 
-       caption = '*Consult at https://www.pnas.org/doi/10.1073/pnas.2113891119')
+  labs(title = 'Palabras más comunes del "threat dictionary"',
+       x = "", y = "Frecuencia", 
+       caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119')
  
  
 ### Ponderando por número total de tokens por partido 
@@ -254,7 +249,8 @@ threat_party_graphs(1970)
 threat_party_graphs(1990)
 
 # post 2000
-threat_party_graphs(2000) ### REPUBLICANOS SE CONVIERTEN MUCHO MAS DRASTICOS RELATIVO A DEMOCRATAS
+threat_party_graphs(2000)### REPUBLICANOS SE CONVIERTEN MUCHO MAS DRASTICOS RELATIVO A DEMOCRATAS
+
 ```
 
 #### v. Threat words por presidente

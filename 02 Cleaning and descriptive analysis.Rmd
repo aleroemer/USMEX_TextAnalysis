@@ -275,6 +275,25 @@ counts_year[counts_year$country=='MEXICO',] %>%
        caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
 
 ```
+#### iii) Zooming in on NAFTA
+
+```{r}
+mex_df <- trade_partners_lst$MEXICO
+
+mex_df_1993 <- mex_df[format(mex_df$date, "%Y") == "1993",] %>% 
+  select(speaker, date, title, text)
+
+mex_df_1993$mentions_nafta <- ifelse(grepl("NAFTA|trade agreement|Trade Agreement", mex_df_1993$text), 1, 0)
+
+percent_nafta <- mean(mex_df_1993$mentions_nafta) * 100
+percent_nafta ##85% de los documentos en 1993 mencionan NAFTA
+
+
+mex_df_1993 %>% 
+  ggplot(aes())
+```
+
+
 
 ### G. Mexico mentions by president
 

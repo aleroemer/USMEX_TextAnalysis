@@ -228,7 +228,7 @@ add_annotations_to_mx_time_series_plot(plot,
   theme_bw()+
   scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 2))+
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-  labs(title = 'Palabras más comunes del "threat dictionary"',
+  labs(title = 'Palabras más comunes del "threat dictionary" \nen párrafos con mención de México',
        x = "", y = "Frecuencia", 
        caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119')
  
@@ -281,7 +281,7 @@ threat_party_graphs(2000)### REPUBLICANOS SE CONVIERTEN MUCHO MAS DRASTICOS RELA
   theme_bw()+
   scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3)) +
   labs(title = 'Palabras más comunes del "threat dictionary" por presidente',
-       subtitle = 'Como porcentaje del total de palabras en párrafos que contienen el término "México"',
+       subtitle = 'Como % del total de palabras en párrafos que contienen el término "México"',
        x = "", y = "%", 
        caption = '*Consultar diccionario https://www.pnas.org/doi/10.1073/pnas.2113891119')+
     coord_flip()

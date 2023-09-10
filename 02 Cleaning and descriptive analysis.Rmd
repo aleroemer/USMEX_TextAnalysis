@@ -149,7 +149,7 @@ for (country in seq_along(trade_partners_lst)){
   # Group by year while we count
   groupby_temp <- trade_partners_lst[[country]]%>% 
     group_by(year) %>% 
-     summarise(n_docs = n())
+     summarise(n_docs = n()) 
   
   # Add a column to identify each batch/country
   groupby_temp['country'] = names(trade_partners_lst)[country]
@@ -194,10 +194,10 @@ counts_since2010 <- counts_since2010 %>%
     country == "CHINA" ~ "CHINA",
   ))
 
-ggplot(data = counts_since2010, aes(x = reorder(pais, average), y = average, fill=pais)) +
+ggplot(data = counts_since2010, aes(x = reorder(country, average), y = average, fill=country)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  geom_text(data = counts_since2010, aes(x = pais, y = average, label = average), vjust = -0.5, color = "black") +
+  geom_text(data = counts_since2010, aes(x = country, y = average, label = average), vjust = -0.5, color = "black") +
   labs(title = 'Promedio de menciones desde 2010',
        subtitle = "",
        y = "", 
@@ -352,6 +352,7 @@ top15_df %>%
   scale_y_continuous(breaks = pretty_breaks(n = 10))+
   scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
   labs(title = 'Número de documentos presidenciales con término "México"', 
+       subtitle = 'ponderado por total de documentos',
        y = "% del total de docs", 
        x = "") +
   coord_flip()

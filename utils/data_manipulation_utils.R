@@ -282,3 +282,20 @@ threat_party_graphs <- function(year_threshold){
  return(plot)
 }
 
+
+#' modificar nombres de paises
+#' funcion para traducir nombres de paises de espanol a ingles
+#' 
+#' @param df es la base de datos sobre la cual cambiar columna 'country'
+#' 
+#' 
+pais_eng_esp <- function(df){ 
+  mutate(country = case_when(
+  country == "CANADA" ~ "CANADÁ",
+  country == "MEXICO" ~ "MÉXICO",
+  country == "JAPAN" ~ "JAPÓN",
+  country == "GERMANY" ~ "ALEMANIA", 
+  country == "CHINA" ~ "CHINA",
+))
+}
+

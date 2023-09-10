@@ -316,7 +316,7 @@ threat_words_count_year <- function(year_threshold){tokens_df %>%
   theme(axis.text.x = element_text(angle = 45, vjust = .7))+
   scale_y_continuous(breaks = seq(0,2000,100))+
   coord_flip() +
-  labs(title = 'Palabras más comunes del "threat dictionary""',
+  labs(title = 'Palabras más comunes del "threat dictionary" \nen párrafos con mención de México',
        x = "", y = "Frecuencia", 
        caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119') 
 }

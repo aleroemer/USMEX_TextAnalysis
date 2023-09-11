@@ -277,22 +277,31 @@ counts_year[counts_year$country=='MEXICO',] %>%
 ```
 #### iii) Zooming in on NAFTA
 
-```{r}
-mex_df <- trade_partners_lst$MEXICO
 
-mex_df_1993 <- mex_df[format(mex_df$date, "%Y") == "1993",] %>% 
+```{r}
+# Filter the data frame to keep only rows where the year is 1993 or 1994
+mex_df_9394 <- mex_df %>% 
+  filter(format(date, "%Y") %in% c("1993", "1994")) %>% 
   select(speaker, date, title, text)
 
-mex_df_1993$mentions_nafta <- ifelse(grepl("NAFTA|trade agreement|Trade Agreement", mex_df_1993$text), 1, 0)
+# Create a new column called 'mentions_nafta' that indicates whether the speech mentions NAFTA, trade agreement, or Trade Agreement
+mex_df_9394 <- mex_df_9394 %>% 
+  mutate(mentions_nafta = ifelse(grepl("NAFTA|trade agreement|Trade Agreement", text), 1, 0))
 
-percent_nafta <- mean(mex_df_1993$mentions_nafta) * 100
-percent_nafta ##85% de los documentos en 1993 mencionan NAFTA
+nafta_summary <- mex_df_9394 %>% 
+  group_by(mentions_nafta) %>% 
+  summarise(count = n()) %>% 
+  mutate(percent = count / sum(count) * 100)
 
-
-mex_df_1993 %>% 
-  ggplot(aes())
+# Create the bar plot
+ggplot(nafta_summary, aes(x = factor(mentions_nafta), y = count, fill = factor(mentions_nafta))) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(percent), "%"), y = count), vjust = -1) +
+  labs(x = "", y = "Count", fill = "Menciona NAFTA") +
+  scale_fill_manual(values = c("0" = "lightblue", "1" = "lightgreen")) +
+  scale_y_continuous(breaks = pretty_breaks(n = 10))
+  theme_minimal()
 ```
-
 
 
 ### G. Mexico mentions by president

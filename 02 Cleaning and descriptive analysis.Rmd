@@ -297,9 +297,12 @@ nafta_summary <- mex_df_9394 %>%
 ggplot(nafta_summary, aes(x = factor(mentions_nafta), y = count, fill = factor(mentions_nafta))) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = paste0(round(percent), "%"), y = count), vjust = -1) +
-  labs(x = "", y = "Count", fill = "Menciona NAFTA") +
+  labs(x = "", y = "Count", fill = "Menciona NAFTA",
+       title = "Número de documentos que mencionan NAFTA",
+       subtitle = "1993 y 1994",
+       caption = 'términos consultados: "NAFTA" o "Trade Agreement"') +
   scale_fill_manual(values = c("0" = "lightblue", "1" = "lightgreen")) +
-  scale_y_continuous(breaks = pretty_breaks(n = 10))
+  ylim(0, 200)+
   theme_minimal()
 ```
 

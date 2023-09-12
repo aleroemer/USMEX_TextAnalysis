@@ -279,7 +279,6 @@ counts_year[counts_year$country=='MEXICO',] %>%
 
 
 ```{r}
-
 ## Intentar de 92 a 95
 mex_df_90s <- trade_partners_lst[["MEXICO"]] %>% 
   filter(format(date, "%Y") %in% c("1992", "1993", "1994", "1995")) %>% 
@@ -302,40 +301,14 @@ nafta_summary <- mex_df_90s %>%
 
 ggplot(nafta_summary, aes(x = factor(year), y = count, fill = factor(mentions_nafta))) +
   geom_bar(position = "fill", stat = "identity") +
-  geom_text(aes(label = round(percent,2), y = percent), vjust = -1) +
+  #geom_text(aes(label = if_else(mentions_nafta == 1, percent, ""), y = percent, vjust = -1))
+  #geom_text(aes(label = if_else(mentions_nafta == 1,
+   #             round(percent,2), y = percent, ""), vjust = -1)) +
   labs(x = "", y = "Count", fill = "Menciona NAFTA",
        title = "Número de documentos que mencionan NAFTA",
        subtitle = "1992 a 1995",
        caption = 'términos consultados: "NAFTA" o "Trade Agreement"') +
   scale_fill_manual(values = c("0" = "lightblue", "1" = "lightgreen")) +
-  theme_minimal()
-
-
-###################
-# Filter the data frame to keep only rows where the year is 1993 or 1994
-mex_df_9394 <- mex_df %>% 
-  filter(format(date, "%Y") %in% c("1993", "1994")) %>% 
-  select(speaker, date, title, text)
-
-# Create a new column called 'mentions_nafta' that indicates whether the speech mentions NAFTA, trade agreement, or Trade Agreement
-mex_df_9394 <- mex_df_9394 %>% 
-  mutate(mentions_nafta = ifelse(grepl("NAFTA|trade agreement|Trade Agreement", text), 1, 0))
-
-nafta_summary <- mex_df_9394 %>% 
-  group_by(mentions_nafta) %>% 
-  summarise(count = n()) %>% 
-  mutate(percent = count / sum(count) * 100)
-
-# Create the bar plot
-ggplot(nafta_summary, aes(x = factor(mentions_nafta), y = count, fill = factor(mentions_nafta))) +
-  geom_bar(stat = "identity") +
-  geom_text(aes(label = paste0(round(percent), "%"), y = count), vjust = -1) +
-  labs(x = "", y = "Count", fill = "Menciona NAFTA",
-       title = "Número de documentos que mencionan NAFTA",
-       subtitle = "1993 y 1994",
-       caption = 'términos consultados: "NAFTA" o "Trade Agreement"') +
-  scale_fill_manual(values = c("0" = "lightblue", "1" = "lightgreen")) +
-  ylim(0, 200)+
   theme_minimal()
 ```
 

@@ -290,11 +290,15 @@ mex_df_90s <- mex_df_90s %>%
   mutate(mentions_nafta = ifelse(grepl("NAFTA|trade agreement|Trade Agreement", text), 1, 0),
          year = year(date))
 
+totals_year <- mex_df_90s %>% 
+  group_by(year) %>% 
+  summarise(total = n())
 
 nafta_summary <- mex_df_90s %>% 
   group_by(mentions_nafta, year) %>% 
   summarise(count = n()) %>% 
-  mutate(percent = count / sum(count) * 100)
+  left_join(totals_year, by = "year") %>% 
+  mutate(percent = count / total * 100)
 
 
 ggplot(nafta_summary, aes(x = factor(year), y = count, fill = factor(mentions_nafta))) +
@@ -302,7 +306,7 @@ ggplot(nafta_summary, aes(x = factor(year), y = count, fill = factor(mentions_na
   geom_text(aes(label = paste0(round(percent), "%"), y = count), vjust = -1) +
   labs(x = "", y = "Count", fill = "Menciona NAFTA",
        title = "Número de documentos que mencionan NAFTA",
-       subtitle = "1993 y 1994",
+       subtitle = "1992 a 1995",
        caption = 'términos consultados: "NAFTA" o "Trade Agreement"') +
   scale_fill_manual(values = c("0" = "lightblue", "1" = "lightgreen")) +
   ylim(0, 200)+

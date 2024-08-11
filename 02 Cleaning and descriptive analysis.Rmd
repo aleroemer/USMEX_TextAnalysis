@@ -178,7 +178,51 @@ for (start_year in c(1800,1900, 1950, 1980)){
   
   print(plot)
 }
+
+
 ```
+
+```{r}
+## Quiero hacer lo mismo haciendo zoom solo de 1820 a 1900!! Importante para la narrativa
+counts_year = data.frame()
+
+for (country in seq_along(trade_partners_lst)){
+  
+  # Group by year while we count
+  groupby_temp <- trade_partners_lst[[country]]%>% 
+    filter(year < 1950) %>% 
+    group_by(year) %>% 
+     summarise(n_docs = n()) 
+  
+  # Add a column to identify each batch/country
+  groupby_temp['country'] = names(trade_partners_lst)[country]
+  
+  # Append to df
+  counts_year = rbind(counts_year, groupby_temp)
+}
+
+counts_year = counts_year[counts_year$year!=2023,]
+
+# Since there wasn't much happening before 1900, let's create several graphs 
+#   with varying start years
+for (start_year in c(1800,1820)){
+  plot = ggplot(counts_year[counts_year['year']>start_year,], aes(year, n_docs, color = country)) + 
+    geom_line(aes(group=country)) +
+    theme_test()+
+    scale_x_continuous(breaks = pretty_breaks(n = 10))+
+    scale_y_continuous(breaks = pretty_breaks(n = 5))+
+    theme(axis.text.x = element_text(angle = 0, vjust = .7))+
+    labs(title = '¿Cuánto Menciona EEUU a sus socios comerciales?',
+         subtitle = "1820 a 1950",
+         y = "", 
+         x = "", 
+         caption = "",
+         color = 'País')
+    print(plot)
+}
+```
+
+
 
 ```{r, warning=FALSE}
 counts_since2010 <- counts_year[counts_year$year>2010,] %>%
@@ -202,7 +246,8 @@ ggplot(data = counts_since2010, aes(x = reorder(country, average), y = average, 
        subtitle = 'Principales socios comerciales de EEUU',
        y = "", 
        x = "",
-       fill = 'País')
+       fill = 'País')+
+theme_bw()
 ```
 
 ### F. Mexico mentions by year

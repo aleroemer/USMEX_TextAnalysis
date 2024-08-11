@@ -8,14 +8,28 @@ author: "Alejandro Roemer & Hugo Salas"
 This doc helps us scrape all the docs we need from The American Presidency Project.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
 ```
 
 ### A. Retrieve the scraping functions we created
 
 ```{r}
-DATA_PATH = "/Users/hugosalas/Roemer & Salas/data"
-UTILS_PATH = "/Users/hugosalas/Roemer & Salas/utils/"
-source(str_c(UTILS_PATH, 'scraping_TAPP_utils.R'))
+set_wd_fn <- function(author){
+  if (author == "Ale"){
+    DATA_PATH <<- "~/My Drive/DiscursoUSA_MX/USMEX_TextAnalysis"
+    UTILS_PATH <<- paste0(DATA_PATH, "/utils/")
+    
+  } else if (author == "Hugo"){
+    DATA_PATH <<- "/Users/hugosalas/Roemer & Salas/data"
+    UTILS_PATH <<- "/Users/hugosalas/Roemer & Salas/utils/"
+  } 
+  
+  setwd(DATA_PATH)
+}
+
+set_wd_fn(author = "Ale")
+source(paste0(UTILS_PATH, 'scraping_TAPP_utils.R'))
 ```
 
 ### B. First and most important search: Mexico mentions 

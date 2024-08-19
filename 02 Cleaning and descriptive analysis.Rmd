@@ -3,9 +3,9 @@ title: "cleaning_n_descriptive"
 output: pdf_document
 date: "2023-04-26"
 author: "Alejandro Roemer & Hugo Salas"
----
 
-This was originally 'preprocessing_usmex.rmd'.
+This was originally 'preprocessing_usmex.rmd'. We create a series of graphs to describe our data.
+---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -88,11 +88,15 @@ party_df <- read_csv(str_c(DATA_PATH, "presidents.csv"))
 ### C. Data cleaning and manipulation
 
 ```{r, message=FALSE}
-CATEGORIES_TO_OMIT <- c("Vice Presidential", "Vice Presidential Candidates", 
-                               "Vice President's Press Secretary", 
-                               "Vice Presidential Debates", "Vice President's Statements",
-                               "Vice President's Remarks", "First Lady Press",
-                               "First Lady")
+# We remove certain categories that we don't find relevant for our analysis
+CATEGORIES_TO_OMIT <- c("Vice Presidential", 
+                        "Vice Presidential Candidates", 
+                        "Vice President's Press Secretary", 
+                        "Vice Presidential Debates", 
+                        "Statements by the Vice President",
+                        "Remarks by the Vice President", 
+                        "First Lady's Press Secretary",
+                        "First Lady")
 
 ## Clean the data we have on presidents
 party_df = clean_party_df(party_df)
@@ -157,102 +161,160 @@ for (country in seq_along(trade_partners_lst)){
   # Append to df
   counts_year = rbind(counts_year, groupby_temp)
 }
+# We remove 2024, since our latest data point is in Aug-18-2024
+counts_year = counts_year[counts_year$year<2024,]
+```
 
-counts_year = counts_year[counts_year$year!=2023,]
+```{r, warning=FALSE}
+# Let's create a label in spanish
+counts_year <- counts_year %>%
+  mutate(country_spanish = case_when(
+    country == "CHINA" ~ "China",
+    country == "CANADA" ~ "Canadá",
+    country == "MEXICO" ~ "México",
+    country == "JAPAN" ~ "Japón",
+    country == "GERMANY" ~ "Alemania",
+    TRUE ~ country  # Retain the original country name if it's not in the list
+  ))
+# Define your custom colors
+custom_colors <- c(
+  "China" = "#58508d",    # Red
+  "Canadá" = "#bc5090",   # Blue
+  "México" = "#003f5c",   # Green
+  "Japón" = "#ff6361",    # Orange
+  "Alemania" = "#ffa600"  # Purple
+)
+```
 
-# Since there wasn't much happening before 1900, let's create several graphs 
-#   with varying start years
-for (start_year in c(1800,1900, 1950, 1980)){
-  plot = ggplot(counts_year[counts_year['year']>start_year,], aes(year, n_docs, color = country)) + 
-    geom_line(aes(group=country)) +
-    theme_test()+
-    scale_x_continuous(breaks = pretty_breaks(n = 10))+
-    scale_y_continuous(breaks = pretty_breaks(n = 5))+
-    theme(axis.text.x = element_text(angle = 0, vjust = .7))+
-    labs(title = '¿Cuánto Menciona EEUU a sus socios comerciales?',
-         subtitle = "",
-         y = "", 
-         x = "", 
-         caption = "",
-         color = 'País') #cambiar nombre de paises a español
-  
-  print(plot)
-}
+```{r, warning=FALSE}
+# First time series: from 1800 to 1980
+plot <- ggplot(counts_year[counts_year['year'] >= 1880 & counts_year['year'] < 1960, ], aes(year, n_docs, color = country_spanish)) + 
+  geom_rect(aes(xmin = 1918, xmax = 1920, ymin = 0, ymax = 70),
+            fill = "grey80", alpha = 0.02, color=NA) +
+  geom_rect(aes(xmin = 1928, xmax = 1930, ymin = 0, ymax = 70),
+            fill = "grey80", alpha = 0.02, color=NA) +
+  geom_rect(aes(xmin = 1944, xmax = 1946, ymin = 0, ymax = 70),
+            fill = "grey80", alpha = 0.02, color=NA) +
+  geom_line(aes(group = country_spanish), size = 0.75) +
+  theme_test() +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 5)) +
+  theme(axis.text.x = element_text(angle = 0, vjust = .7)) +
+  labs(title = '¿Cuánto Menciona EEUU a sus socios comerciales?',
+       subtitle = "",
+       y = "", 
+       x = "", 
+       caption = "",
+       color = 'País') +  # Change the legend title to Spanish
+  scale_color_manual(values = custom_colors)  # Apply custom colors
 
+print(plot)
+```
 
+```{r, warning=FALSE}
+# Second time series: from 1980 to 2023
+plot <- ggplot(counts_year[counts_year['year'] > 1980, ], aes(year, n_docs, color = country_spanish)) + 
+  geom_rect(aes(xmin = 1991, xmax = 1994, ymin = 0, ymax = 900),
+            fill = "grey80", alpha = 0.02, color=NA) +
+  geom_rect(aes(xmin = 2016, xmax = 2020, ymin = 0, ymax = 900),
+            fill = "grey80", alpha = 0.02, color=NA) +
+  geom_line(aes(group = country_spanish), size = 0.75) +
+  theme_test() +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 5)) +
+  theme(axis.text.x = element_text(angle = 0, vjust = .7)) +
+  labs(title = '¿Cuánto Menciona EEUU a sus socios comerciales?',
+       subtitle = "",
+       y = "", 
+       x = "", 
+       caption = "",
+       color = 'País') +  # Change the legend title to Spanish
+  scale_color_manual(values = custom_colors)  # Apply custom colors
+
+print(plot)
 ```
 
 ```{r}
-## Quiero hacer lo mismo haciendo zoom solo de 1820 a 1900!! Importante para la narrativa
-counts_year = data.frame()
+# Categorize years so that we can have a cleaner look
+counts_year <- counts_year %>%
+    mutate(year_category = case_when(
+        year >= 1800 & year <= 1900 ~ '1800-1900',
+        year >= 1901 & year <= 1950 ~ '1901-1950',
+        year >= 1951 & year <= 2000 ~ '1951-2000',
+        year >= 2001 & year <= 2020 ~ '2001-2020',
+        TRUE ~ 'Outside Range'  # Optionally handle years outside these ranges
+    ))
+# Drop obs that do not fall within the established range
+counts_year <- counts_year %>%
+  filter(year_category != 'Outside Range')
 
-for (country in seq_along(trade_partners_lst)){
-  
-  # Group by year while we count
-  groupby_temp <- trade_partners_lst[[country]]%>% 
-    filter(year < 1950) %>% 
-    group_by(year) %>% 
-     summarise(n_docs = n()) 
-  
-  # Add a column to identify each batch/country
-  groupby_temp['country'] = names(trade_partners_lst)[country]
-  
-  # Append to df
-  counts_year = rbind(counts_year, groupby_temp)
-}
+# Get the total number of documents per year
+counts_year = inner_join(all_articles_years_df, counts_year, by = "year")
+counts_year$records <- as.numeric(counts_year$records)
 
-counts_year = counts_year[counts_year$year!=2023,]
+# Group by our year categorization
+counts_year_category <- counts_year %>%
+  group_by(year_category, country_spanish) %>%
+  summarize(total_docs_per_country = sum(n_docs),
+            total_docs = sum(records))
 
-# Since there wasn't much happening before 1900, let's create several graphs 
-#   with varying start years
-for (start_year in c(1800,1820)){
-  plot = ggplot(counts_year[counts_year['year']>start_year,], aes(year, n_docs, color = country)) + 
-    geom_line(aes(group=country)) +
-    theme_test()+
-    scale_x_continuous(breaks = pretty_breaks(n = 10))+
-    scale_y_continuous(breaks = pretty_breaks(n = 5))+
-    theme(axis.text.x = element_text(angle = 0, vjust = .7))+
-    labs(title = '¿Cuánto Menciona EEUU a sus socios comerciales?',
-         subtitle = "1820 a 1950",
-         y = "", 
-         x = "", 
-         caption = "",
-         color = 'País')
-    print(plot)
-}
+# Make year_category so that they are ordered in the plot too
+counts_year_category <- counts_year_category %>%
+  mutate(year_category = factor(year_category, levels = c('2001-2020','1951-2000', '1901-1950', '1800-1900')))
+
+# Create a ratio
+counts_year_category$share_docs_per_country= counts_year_category$total_docs_per_country/counts_year_category$total_docs*100
 ```
 
-
-
-```{r, warning=FALSE}
-counts_since2010 <- counts_year[counts_year$year>2010,] %>%
-  group_by(country) %>%
-  summarize(average = round(mean(n_docs),2))
-
-counts_since2010 <- counts_since2010 %>% 
-  mutate(pais = case_when(
-    country == "CANADA" ~ "CANADÁ",
-    country == "MEXICO" ~ "MÉXICO",
-    country == "JAPAN" ~ "JAPÓN",
-    country == "GERMANY" ~ "ALEMANIA", 
-    country == "CHINA" ~ "CHINA",
-  ))
-
-ggplot(data = counts_since2010, aes(x = reorder(country, average), y = average, fill=country)) +
-  geom_bar(stat = "identity") +
-  coord_flip() +
-  geom_text(data = counts_since2010, aes(x = country, y = average, label = average), vjust = -0.5, color = "black") +
-  labs(title = 'Promedio de menciones desde 2010',
-       subtitle = 'Principales socios comerciales de EEUU',
-       y = "", 
-       x = "",
-       fill = 'País')+
-theme_bw()
+```{r}
+# Plot
+ggplot(counts_year_category, aes(x = share_docs_per_country, y = year_category, fill = country_spanish)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = sprintf("%.1f", share_docs_per_country)), 
+            position = position_dodge(width = 0.9), 
+            hjust = -0.2,  # Adjust position if needed
+            size = 3.5) +  # Adjust text size if needed
+  labs(x = "%", y = "", 
+       title = "Porcentaje de referencias por país") +
+  scale_fill_manual(name = "País", values = custom_colors) + 
+  theme_minimal()
 ```
 
 ### F. Mexico mentions by year
 
 #### i) Raw count
+
+```{r, warning=FALSE}
+Y_VAL = 200
+COLOR = "#003f5c"
+SIZE = 3
+library(zoo)
+counts_year_mexico = counts_year[counts_year$country=='MEXICO',]
+counts_year_mexico$rolling_avg_n_docs <- rollmean(counts_year_mexico$n_docs, k = 3, fill = NA, align = "right")
+counts_year_mexico %>% 
+  ggplot(aes(x = year, y = rolling_avg_n_docs)) +
+  geom_rect(aes(xmin = 1846, xmax = 1848, ymin = 0, ymax = 300),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 1864, xmax = 1867, ymin = 0, ymax = 300),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 1910, xmax = 1917, ymin = 0, ymax = 300),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 1991, xmax = 1994, ymin = 0, ymax = 300),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 2016, xmax = 2020, ymin = 0, ymax = 300),
+            fill = "grey80", alpha = 0.02) +
+  geom_line(color =COLOR) +
+  theme_test() +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 5)) +
+  #ylim(0, NA) +
+  labs(title = 'Documentos presidenciales con mención de "México" ',
+       subtitle = "",
+       y = "", 
+       x = "", 
+       caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
+
+```
 
 ```{r, warning=FALSE}
 Y_VAL = 200
@@ -288,18 +350,46 @@ counts_year[counts_year$country=='MEXICO',] %>%
 #### ii) Normalized by total docs by year
 
 ```{r, warning=FALSE}
-counts_year = inner_join(all_articles_years_df, counts_year, by = "year")
 Y_VAL = 25
 
 counts_year['share'] = counts_year$n_docs/as.integer(counts_year$records)*100
+```
 
+```{r, warning=FALSE}
+COLOR = "#003f5c"
+counts_year[counts_year$country=='MEXICO',] %>% 
+  ggplot(aes(x = year, y = share)) +
+  geom_rect(aes(xmin = 1846, xmax = 1848, ymin = 0, ymax = 30),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 1864, xmax = 1867, ymin = 0, ymax = 30),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 1910, xmax = 1917, ymin = 0, ymax = 30),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 1991, xmax = 1994, ymin = 0, ymax = 30),
+            fill = "grey80", alpha = 0.02) +
+  geom_rect(aes(xmin = 2016, xmax = 2020, ymin = 0, ymax = 30),
+            fill = "grey80", alpha = 0.02) +
+  geom_line(color=COLOR) +
+  theme_test() +
+  scale_x_continuous(breaks = pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = pretty_breaks(n = 5)) +
+  geom_hline(yintercept = mean(counts_year[counts_year$country=='MEXICO','share']), color = 'black', linetype='dotted') +
+  labs(title = 'Documentos presidenciales con mención de "México" ',
+       subtitle = "Como % del total de documentos ese año",
+       y = "%", 
+       x = "", 
+       caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
+
+```
+
+```{r, warning=FALSE}
 counts_year[counts_year$country=='MEXICO',] %>% 
   ggplot(aes(x = year, y = share)) +
   geom_line() +
   theme_test() +
   scale_x_continuous(breaks = pretty_breaks(n = 10)) +
   scale_y_continuous(breaks = pretty_breaks(n = 5)) +
-  geom_hline(yintercept = mean(counts_year[counts_year$country=='MEXICO','share']), color = 'red') +
+  geom_hline(yintercept = mean(counts_year[counts_year$country=='MEXICO','share']), color = 'black', linetype='dotted') +
   geom_vline(aes(xintercept = 1847.5), linetype = "dotted", color = COLOR)+   
   annotate("text", x=1827, y=Y_VAL, label="1848 - Fin de Guerra \nMéxico-Americana ", color = COLOR, size = SIZE)+
   geom_vline(aes(xintercept = 1865), linetype = "dotted", color = COLOR)+   
@@ -320,13 +410,13 @@ counts_year[counts_year$country=='MEXICO',] %>%
        caption = "*discursos disponibles en https://www.presidency.ucsb.edu/")
 
 ```
-#### iii) Zooming in on NAFTA
 
+#### iii) Zooming in on NAFTA
 
 ```{r}
 ## Intentar de 92 a 95
 mex_df_90s <- trade_partners_lst[["MEXICO"]] %>% 
-  filter(format(date, "%Y") %in% c("1992", "1993", "1994", "1995")) %>% 
+  filter(format(date, "%Y") %in% c("1989","1990","1991","1992", "1993", "1994", "1995", "1996")) %>% 
   select(speaker, date, title, text)
 
 # Create a new column called 'mentions_nafta' that indicates whether the speech mentions NAFTA, trade agreement, or Trade Agreement
@@ -342,39 +432,33 @@ nafta_summary <- mex_df_90s %>%
   group_by(mentions_nafta, year) %>% 
   summarise(count = n()) %>% 
   left_join(totals_year, by = "year") %>% 
-  mutate(percent = count / total)
+  mutate(percent = count / total*100)
 
-ggplot(nafta_summary, aes(x = factor(year), y = count, fill = factor(mentions_nafta))) +
+ggplot(nafta_summary, aes(x = factor(year), y = count*100, fill = factor(mentions_nafta))) +
   geom_bar(position = "fill", stat = "identity") +
   #geom_text(aes(label = if_else(mentions_nafta == 1, percent, ""), y = percent, vjust = -1))
   #geom_text(aes(label = if_else(mentions_nafta == 1,
    #             round(percent,2), y = percent, ""), vjust = -1)) +
-  labs(x = "", y = "Count", fill = "Menciona NAFTA",
-       title = "Número de documentos que mencionan NAFTA",
-       subtitle = "1992 a 1995",
-       caption = 'términos consultados: "NAFTA" o "Trade Agreement"') +
-  scale_fill_manual(values = c("0" = "lightblue", "1" = "lightgreen")) +
+  labs(x = "", y = "", fill = "Menciona al TLCAN",
+       title = "Porcentaje de textos que mencionan el TLCAN",
+
+       caption = 'Términos consultados: "NAFTA" o "Trade Agreement"') +
+  scale_fill_manual(values = c("0" = "#003f5c", "1" = "#ff6361"),
+                    labels = c("1" = "Sí", "0" = "No")) +
   theme_minimal()
 ```
 
+```{r}
+nafta_summary[nafta_summary$mentions_nafta == 1, ]
+
+```
 
 ### G. Mexico mentions by president
 
 #### i) Raw count
 
 ```{r}
-VICE_PRESIDENT_CATEGORIES <- c("Vice Presidential", "Vice Presidential Candidates", 
-                               "Vice President's Press Secretary", 
-                               "Vice Presidential Debates", "Vice President's Statements",
-                               "Vice President's Remarks", "First Lady Press",
-                               "First Lady")
-
 temp_df = trade_partners_lst$MEXICO
-
-#Remove vice presidents and first ladies
-for (category in VICE_PRESIDENT_CATEGORIES){
-  temp_df = temp_df[temp_df[category]==0,]
-}
 
 ndoc_pres <- temp_df %>% 
   group_by(last_name, speaker) %>% 
@@ -404,15 +488,22 @@ top15_df <- ndoc_pres %>%
 top15_df %>% 
   ggplot(aes(x = fct_reorder(last_name, n_docs), y = n_docs, fill = Partido))+
   geom_col()+
-  geom_text(aes(label = n_docs), vjust = 0.5, nudge_y = 25) +
+  geom_text(aes(label = n_docs), vjust = 0.5, nudge_y = 50) +
   theme_bw()+
   scale_y_continuous(breaks = pretty_breaks(n = 10))+
-  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
+  scale_fill_manual(values = c("Democrático" = "#003f5c", "Republicano" = "#ff6361")) +
   labs(title = 'Número de documentos presidenciales con término "México"', 
-       y = "Número de Documentos", 
+       y = "#", 
        x = "") +
-  coord_flip()
+  coord_flip() +
+  theme(panel.grid.major = element_blank(),  # Remove major grid lines
+        panel.grid.minor = element_blank(),
+        aspect.ratio = 1)
 
+```
+
+```{r}
+top15_df
 ```
 
 #### ii) Normalized by total docs by president
@@ -429,23 +520,23 @@ top15_df <- ndoc_pres %>%
 top15_df %>% 
   ggplot(aes(x = fct_reorder(last_name, share), y = share, fill = Partido))+
   geom_col()+
-  geom_text(aes(label = round(share,2)), vjust = 0.5, nudge_y = 1) +
+  geom_text(aes(label = round(share,1)), vjust = 0.5, nudge_y = 1) +
   theme_bw()+
   scale_y_continuous(breaks = pretty_breaks(n = 10))+
-  scale_fill_manual(values = wesanderson::wes_palette("Moonrise3", n = 3))+
+  scale_fill_manual(values = c("Demócrata" = "#003f5c", "Republicano" = "#ff6361", "Whig" = "#ffa600")) +
   labs(title = 'Número de documentos presidenciales con término "México"', 
        subtitle = 'ponderado por total de documentos',
        y = "% del total de docs", 
        x = "") +
-  coord_flip()
+  coord_flip() +
+  theme(panel.grid.major = element_blank(),  # Remove major grid lines
+        panel.grid.minor = element_blank(),
+        aspect.ratio = 1)
 ```
-### H. Save each country's articles in different formats: CORPUS, TOKENS, N-GRAMS, DFM
-To create the tokenized file, we do the following: 
--   Tokenizing (bag of word assumption)
--   Discarding stop words
--   Removing capitalization, punctuation and numbers
--   Combining similar terms (lemmatizing)
 
+### H. Save each country's articles in different formats: CORPUS, TOKENS, N-GRAMS, DFM
+
+To create the tokenized file, we do the following: - Tokenizing (bag of word assumption) - Discarding stop words - Removing capitalization, punctuation and numbers - Combining similar terms (lemmatizing)
 
 ```{r,warning=FALSE}
 save(trade_partners_lst, file = paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
@@ -487,7 +578,4 @@ for (country in names(trade_partners_lst)){
   temp_dfm_tokens_ngram <- dfm(temp_tokens_ngram)
   save(temp_dfm_tokens_ngram, file = paste0(CLEAN_DATA_PATH, "dfm_tokens_ngram_", country))
 }
-  
- 
 ```
-  

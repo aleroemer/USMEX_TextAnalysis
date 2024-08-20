@@ -491,7 +491,7 @@ top15_df %>%
   geom_text(aes(label = n_docs), vjust = 0.5, nudge_y = 50) +
   theme_bw()+
   scale_y_continuous(breaks = pretty_breaks(n = 10))+
-  scale_fill_manual(values = c("Democrático" = "#003f5c", "Republicano" = "#ff6361")) +
+  scale_fill_manual(values = c("Demócrata" = "#003f5c", "Republicano" = "#ff6361")) +
   labs(title = 'Número de documentos presidenciales con término "México"', 
        y = "#", 
        x = "") +

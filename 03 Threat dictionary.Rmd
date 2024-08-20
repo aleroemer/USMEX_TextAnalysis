@@ -1,0 +1,209 @@
+---
+title: "sentiment_n_threat_dictionary"
+author: "Alejandro Roemer & Hugo Salas"
+date: "2023-06-25"
+output: pdf_document
+---
+
+This was originally 'dictionary_project.rmd'.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### A. Load all relevant packages and set directories
+
+```{r, message=FALSE}
+library(tidyverse)
+library(textdata)
+library(quanteda)
+#require(quanteda.corpora)
+library(tidytext)
+library(scales)
+# Check if devtools package is installed
+if (!requireNamespace("devtools", quietly = TRUE)) {
+  # Install devtools package
+  install.packages("devtools")
+  
+  # Load devtools package
+  library(devtools)
+} else {
+  # Load devtools package
+  library(devtools)
+}
+```
+
+```{r}
+rm(list = ls())
+
+if (Sys.info()["user"]=='hugosalas'){
+  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+} else if (Sys.info()["user"]=='aleroemer'){
+  BASE_PATH = "~/My Drive/DiscursoUSA_MX/"
+}
+
+DATA_PATH =  paste0(BASE_PATH, "data/")
+CLEAN_DATA_PATH = paste0(DATA_PATH, "clean/")
+UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
+
+source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
+```
+
+### B. Load all relevant files and DF
+
+```{r}
+load(paste0(CLEAN_DATA_PATH, "clean_articles_ALL"))
+
+threat_dict <- read.delim(paste0(DATA_PATH, "threat.txt"),
+                          header = FALSE) %>% 
+  rename(threat_features = V1)
+```
+
+### C. Threat dictionary analysis (Choi et al. (2022))
+
+This dictionary does not have a sentiment associated to it, therefore we cannot use the quanteda function as.dictionary(). Instead, following the methodology by I will only be able to count the number of matches and the percent of threat
+
+#### i. MEXICO: Figure out which words in our paragraphs are 'threat' words
+
+```{r}
+current_country = 'MEXICO'
+
+#Create unique text ID column
+trade_partners_lst[[current_country]] = create_unique_id(current_country)
+country_df = trade_partners_lst[[current_country]]
+save(country_df, file = paste0(CLEAN_DATA_PATH, "clean_articles_", current_country))
+
+#Create a paragraph df with only paragraphs that mention MEXICO
+paragraphs_df = separate_text_into_paragraphs(country = current_country)
+save(paragraphs_df, file = paste0(CLEAN_DATA_PATH, "paragraphs_", current_country))
+
+tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
+
+# Eliminate stopwords
+data(stop_words)
+tokens_df_nosw <- tokens_df %>%
+  anti_join(stop_words, by = c("word_tokens" = "word"))
+
+# Identify threat tokens
+tokens_df <- tokens_df_nosw %>% 
+  mutate(threat_feature = if_else(word_tokens %in% threat_dict$threat_features, 1, 0))
+
+rm(tokens_df_nosw)
+# Count all tokens
+tokens_df$count = 1
+```
+
+#### ii. MEXICO: Most used 'threat' words in all documents related to Mexico
+
+```{r}
+plot <- tokens_df %>% 
+  filter(threat_feature == 1, year >= 1970) %>% 
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  count(word_tokens) %>% 
+  arrange(desc(n)) %>%
+  head(20) %>% 
+  ggplot(aes(x = fct_reorder(word_tokens,n), n)) +
+  geom_col(fill = "#003f5c") +
+  theme_bw() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 45, vjust = .7)) +
+  scale_y_continuous(breaks = seq(0, 2000, 100)) +
+  labs(title = 'Palabras más comunes del "threat dictionary"',
+       x = "", y = "Frecuencia", 
+       caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119')
+```
+
+#### iv. MEXICO: Threat words by Party
+```{r}
+### Data wrangling
+## The analysis will be focused after this year
+AFTER_THIS_YEAR = 1970
+
+# Total token count by party
+total_toks_by_party <- tokens_df %>%
+     filter(year > AFTER_THIS_YEAR) %>%
+     group_by(Party) %>%
+     summarize(total_count_by_party = sum(count)) 
+
+# Top 15 most used threat words:
+top_15_threat_tokens <- tokens_df %>% 
+    filter(threat_feature == 1) %>%
+    mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+           word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+    group_by(word_tokens) %>% 
+    summarise(total_count_per_token = n())%>% 
+    ungroup() %>% 
+    arrange(desc(total_count_per_token)) %>%
+    head(15)
+
+# Threat words by party
+threat_tokens_by_party <- tokens_df %>% 
+  filter(threat_feature == 1) %>%
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  group_by(Party, word_tokens) %>% 
+  summarise(token_count_by_party = n())
+
+# Top 15 most used threat words by party
+top_15_threat_tokens_by_party <- inner_join(threat_tokens_by_party, top_15_threat_tokens, by = "word_tokens")
+top_15_threat_tokens_by_party <- inner_join(top_15_threat_tokens_by_party, total_toks_by_party, by = 'Party')
+top_15_threat_tokens_by_party <- top_15_threat_tokens_by_party %>%
+  filter(Party %in% c("Democratic", "Republican"))
+top_15_threat_tokens_by_party$token_share_by_party = top_15_threat_tokens_by_party$token_count_by_party/top_15_threat_tokens_by_party$total_count_by_party*100
+
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+plot <- top_15_threat_tokens_by_party %>%
+  ggplot(aes(x = fct_reorder(word_tokens, total_count_per_token), y = token_share_by_party, fill = Party)) +
+    geom_col(position = "dodge2") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 20, vjust = 0.7),
+          panel.grid.major = element_blank(), # Removes major gridlines
+          panel.grid.minor = element_blank()) + # Removes minor gridlines
+    labs(title = "Token Count by Party and Word",
+         x = "",
+         y = "%",
+         fill = "") +
+    scale_fill_manual(values = c("Democratic" = "#003f5c", "Republican" = "#ff6361"))
+print(plot)
+```
+
+#### v. Threat words por presidente
+
+```{r, warning=FALSE}
+ threat_pres <- tokens_df %>% 
+  filter(threat_feature == 1) %>%
+  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
+         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
+  group_by(last_name) %>% 
+  summarise(n_threats = n(),
+            Party = Party)%>% 
+  slice(1) %>% 
+  arrange(desc(n_threats)) 
+  
+ total_tokens_pres<- tokens_df %>% 
+ count(last_name) %>% 
+ rename(total_toks = n)
+  
+ threat_pres <- threat_pres %>% 
+   left_join(total_tokens_pres, by = "last_name") %>% 
+   mutate(n_weighted = round(n_threats/total_toks*100,2)) %>% 
+   head(15)
+ 
+ threat_pres %>% 
+  ggplot(aes(x = fct_reorder(last_name,n_weighted), n_weighted, fill = Party))+
+  geom_col()+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), # Removes major gridlines
+        panel.grid.minor = element_blank()) + # Removes minor gridlines
+  scale_fill_manual(values = c("Democratic" = "#003f5c", "Republican" = "#ff6361", "Whig" = "#ffa600")) +
+  labs(title = 'Palabras más comunes del "threat dictionary" por presidente',
+       subtitle = 'Como % del total de palabras en párrafos que contienen el término "México"',
+       x = "", y = "%", 
+       caption = '*Consultar diccionario https://www.pnas.org/doi/10.1073/pnas.2113891119',
+       fill = "")+
+    coord_flip()
+
+```

@@ -1,11 +1,12 @@
 ---
 title: "Scraping_docs"
 output: pdf_document
-date: "2023-04-25"
+date: "2025-02-24"
 author: "Alejandro Roemer & Hugo Salas"
+This script helps us scrape all the docs we need from The American Presidency Project (TAPP). Specifically, all mentions of 'MEXICO', 'JAPAN', 'GERMANY', 'CANADA' and 'CHINA'. 
 ---
 
-This doc helps us scrape all the docs we need from The American Presidency Project.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
@@ -17,12 +18,12 @@ library(ggplot2)
 ```{r}
 set_wd_fn <- function(author){
   if (author == "Ale"){
-    DATA_PATH <<- "~/My Drive/DiscursoUSA_MX/USMEX_TextAnalysis"
+    DATA_PATH <<- "~/My Drive/Desktop - Alejandro’s MacBook Air 2025/USMEX_TextAnalysis"
     UTILS_PATH <<- paste0(DATA_PATH, "/utils/")
     
   } else if (author == "Hugo"){
-    DATA_PATH <<- "/Users/hugosalas/Roemer & Salas/data"
-    UTILS_PATH <<- "/Users/hugosalas/Roemer & Salas/utils/"
+    DATA_PATH <<- "/Users/hugosalas/Roemer & Salas/data/"
+    UTILS_PATH <<- "/Users/hugosalas/Roemer & Salas/USMEX_TextAnalysis/utils/"
   } 
   
   setwd(DATA_PATH)
@@ -122,7 +123,7 @@ save(all_articles_presidents_df, file = str_c(DATA_PATH,"/all_articles_president
 BASE_URL_HEAD <- "https://www.presidency.ucsb.edu/advanced-search?field-keywords=&field-keywords2=&field-keywords3=&from%5Bdate%5D=01-01-"
 BASE_URL_BELLY <- "&to%5Bdate%5D=12-31-"
 BASE_URL_TAIL <- "&person2=&category2%5B%5D=406&category2%5B%5D=83&category2%5B%5D=75&category2%5B%5D=55&category2%5B%5D=58&category2%5B%5D=74&category2%5B%5D=18&category2%5B%5D=76&category2%5B%5D=73&category2%5B%5D=69&category2%5B%5D=8&category2%5B%5D=78&category2%5B%5D=85&category2%5B%5D=52&category2%5B%5D=53&category2%5B%5D=46&category2%5B%5D=82&category2%5B%5D=84&category2%5B%5D=51&category2%5B%5D=428&category2%5B%5D=59&category2%5B%5D=48&category2%5B%5D=54&category2%5B%5D=45&category2%5B%5D=400&category2%5B%5D=63&category2%5B%5D=65&category2%5B%5D=64&category2%5B%5D=49&category2%5B%5D=12&category2%5B%5D=77&category2%5B%5D=68&category2%5B%5D=407&category2%5B%5D=19&category2%5B%5D=408&category2%5B%5D=396&category2%5B%5D=81&category2%5B%5D=411&category2%5B%5D=66&category2%5B%5D=469&category2%5B%5D=57&category2%5B%5D=488&category2%5B%5D=456&category2%5B%5D=50&category2%5B%5D=442&category2%5B%5D=72&category2%5B%5D=382&category2%5B%5D=475&category2%5B%5D=476&category2%5B%5D=484&category2%5B%5D=383&category2%5B%5D=486&category2%5B%5D=70&category2%5B%5D=62&category2%5B%5D=80&category2%5B%5D=56&category2%5B%5D=71&category2%5B%5D=443&category2%5B%5D=10&category2%5B%5D=67&category2%5B%5D=16&category2%5B%5D=79&category2%5B%5D=17&category2%5B%5D=435&category2%5B%5D=13&category2%5B%5D=9&category2%5B%5D=14&category2%5B%5D=424&category2%5B%5D=423&items_per_page=25"
-YEARS <- 1789:2023
+YEARS <- 1789:2024
 ```
 
 ```{r}

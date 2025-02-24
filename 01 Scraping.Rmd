@@ -18,7 +18,7 @@ library(ggplot2)
 ```{r}
 set_wd_fn <- function(author){
   if (author == "Ale"){
-    DATA_PATH <<- "~/My Drive/DiscursoUSA_MX/USMEX_TextAnalysis"
+    DATA_PATH <<- "~/My Drive/Desktop - Alejandro’s MacBook Air 2025/USMEX_TextAnalysis"
     UTILS_PATH <<- paste0(DATA_PATH, "/utils/")
     
   } else if (author == "Hugo"){
@@ -29,7 +29,7 @@ set_wd_fn <- function(author){
   setwd(DATA_PATH)
 }
 
-set_wd_fn(author = "Hugo")
+set_wd_fn(author = "Ale")
 source(paste0(UTILS_PATH, 'scraping_TAPP_utils.R'))
 ```
 

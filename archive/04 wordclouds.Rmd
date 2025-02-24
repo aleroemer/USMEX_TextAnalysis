@@ -81,16 +81,16 @@ wordcloud2(trump_wcloud, size = 1, color = rep(c("#006847", "#ED2939"),2228))
 # Troubleshooting: https://github.com/Lchiffon/wordcloud2/issues/12
 #"However, if I re-install the package directly from git rather than cran, it works!"
 library(devtools)
-devtools::install_github("lchiffon/wordcloud2", force = TRUE)
+#devtools::install_github("lchiffon/wordcloud2", force = TRUE)
 
 # final
 wordcloud2(trump_wcloud, 
            size = 1.3,
            figPath = "images/trump2.png",
-           color = rep(c("#006847", "#ED2939"),2228))
+           color = rep(c("#003f5c", "#ff6361", "#ffa600"),2228))
 
 #lettercloud
-letterCloud(trump_wcloud, word = "TRUMP", color = rep(c("#006847", "#ED2939"),2228))
+#letterCloud(trump_wcloud, word = "TRUMP", color = rep(c("#006847", "#ED2939"),2228))
 
 # Save image
 

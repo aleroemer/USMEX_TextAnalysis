@@ -1,0 +1,90 @@
+---
+title: "04 wordclouds"
+output: pdf_document
+date: "2023-09-04"
+
+This creates one word cloud for Donald Trump's most used words in paragraphs that mention Mexico. 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(wordcloud2)
+library(tvthemes)
+library(wordcloud)
+library(RColorBrewer)
+library(png)
+library(devtools)
+```
+
+```{r}
+rm(list = ls())
+
+if (Sys.info()["user"]=='hugosalas'){
+  BASE_PATH = "/Users/hugosalas/Roemer & Salas/"
+} else if (Sys.info()["user"]=='aleroemer'){
+  BASE_PATH = "~/My Drive/DiscursoUSA_MX/"
+}
+
+DATA_PATH =  paste0(BASE_PATH, "data/")
+CLEAN_DATA_PATH = paste0(DATA_PATH, "clean/")
+UTILS_PATH = paste0(BASE_PATH, "USMEX_TextAnalysis/utils/")
+
+source(str_c(UTILS_PATH, 'data_manipulation_utils.R'))
+```
+
+### B. Load all relevant files and DF
+
+```{r}
+load(paste0(CLEAN_DATA_PATH, "paragraphs_MEXICO"))
+```
+
+### C. Tokenize Paragraphs that mention Mexico
+```{r}
+tokens_df <- unnest_tokens(paragraphs_df, word_tokens, text_paragraph, token = "words")
+
+#eliminate stopwords
+data(stop_words)
+
+# Assuming your dataframe is called 'df' and the column containing the tokens is called 'word_tokens'
+tokens_df_nosw <- tokens_df %>%
+  anti_join(stop_words, by = c("word_tokens" = "word")) %>% 
+   mutate(word_tokens = case_when(
+    word_tokens == "border" ~ "border",
+    word_tokens == "calderon" ~ "calderón",
+    word_tokens == "drug"     ~ "drugs",
+    word_tokens == "cartels"  ~ "cartel", 
+    word_tokens == "lópez"    ~ "lopez",
+    word_tokens == "deals"    ~ "deal", 
+    TRUE ~ word_tokens))
+```
+
+
+### D. Trump Wordcloud
+```{r}
+set.seed(9413)
+exclude = c("mexico", "u.s", "canada", "applause", "united", "trump", "president", "el")
+
+#Create wordcloud DF
+trump_wcloud <- wordcloud_df("Trump", exclude)
+wordcloud2(trump_wcloud,size = 1)
+wordcloud2(trump_wcloud, size = 1, color = rep(c("#003f5c", "#ff6361", "#ffa600"),2228))
+
+# Only install if necessary
+#devtools::install_github("lchiffon/wordcloud2", force = TRUE)
+
+wordcloud2(trump_wcloud, 
+           size = 1.3,
+           figPath = "images/trump2.png",
+           color = rep(c("#003f5c", "#ff6361", "#ffa600"),2228))
+
+#lettercloud
+letterCloud(trump_wcloud, word = "TRUMP", color = rep(c("#003f5c", "#ff6361", "#ffa600"),2228))
+
+# Save image
+
+```

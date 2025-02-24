@@ -298,25 +298,3 @@ pais_eng_esp <- function(df){
   country == "CHINA" ~ "CHINA",
 ))
 }
-
-#' Most common threat dictionary features
-#' function to filter graph by year threshold
-#' @param year is the threshold year 
-#' 
-threat_words_count_year <- function(year_threshold){tokens_df %>% 
-  filter(threat_feature == 1, year >= year_threshold) %>% 
-  mutate(word_tokens = if_else(word_tokens == "problem" | word_tokens == "problems", "problem", word_tokens),
-         word_tokens = if_else(word_tokens == "concern" | word_tokens == "concerns", "concern", word_tokens)) %>% 
-  count(word_tokens) %>% 
-  arrange(desc(n)) %>%
-  head(20) %>% 
-  ggplot(aes(x = fct_reorder(word_tokens,n), n))+
-  geom_col(fill = "lightblue")+
-  theme_bw()+
-  theme(axis.text.x = element_text(angle = 45, vjust = .7))+
-  scale_y_continuous(breaks = seq(0,2000,100))+
-  coord_flip() +
-  labs(title = 'Palabras más comunes del "threat dictionary" \nen párrafos con mención de México',
-       x = "", y = "Frecuencia", 
-       caption = '*Consultar https://www.pnas.org/doi/10.1073/pnas.2113891119') 
-}

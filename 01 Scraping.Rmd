@@ -2,7 +2,7 @@
 title: "Scraping_docs"
 output: pdf_document
 date: "2025-02-24"
-author: "Alejandro Roemer & Hugo Salas, Github Test 2025"
+author: "Alejandro Roemer & Hugo Salas, prueba 2025"
 This script helps us scrape all the docs we need from The American Presidency Project (TAPP). Specifically, all mentions of 'MEXICO', 'JAPAN', 'GERMANY', 'CANADA' and 'CHINA'. 
 ---
 

@@ -63,7 +63,7 @@ scrape_doc <- function(html_object, categories_matrix){
   #       html_object (html): object produced by using the <read_html> function
   #                               with a given URL from The American Presidency
   #     
-  #     Returns: a list with the name of the speaker, date, title and text
+  #     Returns: a list with the name of the speaker, date, title, location (if applies) and text
   
   speaker <- html_nodes(html_object, ".diet-title a") %>% 
     html_text() # Speaker
@@ -72,6 +72,7 @@ scrape_doc <- function(html_object, categories_matrix){
     mdy() # Date
   title <- html_nodes(html_object, "h1") %>%
     html_text() # Title
+  location <- html_nodes(html_object, ".field-spot-state")
   text <- html_nodes(html_object, "div.field-docs-content") %>%
     html_text() # Article text
   

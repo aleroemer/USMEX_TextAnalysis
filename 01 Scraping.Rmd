@@ -34,7 +34,7 @@ source(paste0(UTILS_PATH, 'scraping_TAPP_utils.R'))
 ```
 
 ### B. First and most important search: Mexico mentions 
-We scrape all articles containing the string "Mexico" and nott "New Mexico" or "Gulf of Mexico".
+We scrape all articles containing the string "Mexico" and not "New Mexico" or "Gulf of Mexico".
 
 - **All of these Terms**: "Mexico"
 - **Any of these Terms**:  
